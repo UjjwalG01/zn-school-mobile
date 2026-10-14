@@ -1,10 +1,10 @@
-import { Text, View } from 'react-native';
+import { Redirect } from 'expo-router';
 
-// Placeholder route so expo-router has an entry. Replaced by the (auth) group in M1.
+import { useSession } from '../src/auth/session';
+
+// Entry switchboard: signed out → login; signed in → resolve school + shell (app/(context)/resolve).
 export default function Index() {
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>ZN School</Text>
-    </View>
-  );
+  const { status } = useSession();
+  if (status === 'booting') return null;
+  return <Redirect href={status === 'signed-in' ? '/resolve' : '/login'} />;
 }

@@ -5,6 +5,8 @@ export interface ApiEvents {
   unauthorized: undefined;
   /** The selected school's membership was removed/deactivated server-side. */
   'tenant-access-lost': undefined;
+  /** The selected school is suspended/archived (TENANT_ACCESS_DENIED). */
+  'school-suspended': undefined;
   /** The selected school's license blocks every tenant route. */
   'license-blocked': { errorCode: string; message: string };
 }
@@ -14,6 +16,7 @@ type Listener<K extends keyof ApiEvents> = (payload: ApiEvents[K]) => void;
 const listeners: { [K in keyof ApiEvents]: Set<Listener<K>> } = {
   unauthorized: new Set(),
   'tenant-access-lost': new Set(),
+  'school-suspended': new Set(),
   'license-blocked': new Set(),
 };
 

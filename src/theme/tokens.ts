@@ -12,6 +12,8 @@ export interface ColorTokens {
   textMuted: string;
   textInverse: string;
   accent: string;
+  /** Text/icons drawn on an `accent` surface (primary button). */
+  onAccent: string;
   border: string;
   destructive: string;
   success: string;
@@ -28,6 +30,7 @@ export const lightColors: ColorTokens = {
   textMuted: '#6b7280', // --color-text-muted
   textInverse: '#f5f6f8', // --color-text-inverse
   accent: '#2563eb', // --color-accent
+  onAccent: '#ffffff', // mobile-only: contrast on accent (the web uses white button text)
   border: '#e0e0e0', // --color-border
   destructive: '#dc2626', // --color-destructive
   success: '#16a34a', // --color-success
@@ -44,6 +47,7 @@ export const darkColors: ColorTokens = {
   textMuted: '#9ca3af',
   textInverse: '#f5f6f8',
   accent: '#60a5fa',
+  onAccent: '#0b0e17',
   border: '#2a3042',
   destructive: '#f87171',
   success: '#4ade80',
@@ -66,6 +70,9 @@ export const typography = {
 
 /** Minimum touch target in points (accessibility rule). */
 export const MIN_TOUCH_TARGET = 44;
+
+/** Opacity of a disabled control (text stays readable; the state is also exposed to screen readers). */
+export const DISABLED_OPACITY = 0.5;
 
 export type ColorScheme = 'light' | 'dark';
 

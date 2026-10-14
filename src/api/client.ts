@@ -19,7 +19,11 @@ export interface AuthAdapter {
   getAccessToken(): Promise<string | null> | string | null;
   /** Selected school; comes only from `GET /tenancy/my-schools`. */
   getTenantId(): string | null;
-  /** Exchange the refresh token for a new pair and persist it BEFORE resolving. false = session over. */
+  /**
+   * Exchange the refresh token for a new pair and persist it BEFORE resolving. `false` = the session
+   * is over. Reject (e.g. a network `ApiError`) when the outcome is unknown: the request fails with
+   * that error and the session is kept.
+   */
   refresh(): Promise<boolean>;
 }
 
@@ -67,9 +71,9 @@ export function refreshSessionOnce(): Promise<boolean> {
         refreshInFlight = null;
         return ok;
       },
-      () => {
+      (error: unknown) => {
         refreshInFlight = null;
-        return false;
+        throw error;
       },
     );
   }
@@ -155,6 +159,7 @@ async function send<T>(
     const raw = await response.text();
     const { message, errorCode } = parseErrorBody(raw || response.statusText);
     if (errorCode === 'TENANT_MEMBERSHIP_NOT_FOUND') emitApiEvent('tenant-access-lost', undefined);
+    if (errorCode === 'TENANT_ACCESS_DENIED') emitApiEvent('school-suspended', undefined);
     if (errorCode && LICENSE_BLOCK_CODES.has(errorCode)) {
       emitApiEvent('license-blocked', { errorCode, message });
     }

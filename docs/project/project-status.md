@@ -9,9 +9,11 @@ access: Read
 ## Status
 
 Last updated: 2026-10-14. Current phase: **M0** (backend prerequisites, in the backend repo).
-**M1 scaffolding only** is in place (user-approved 2026-10-14): no screens, no login/activation, no
-session storage, no call to any *Proposed* endpoint. Device check so far: bundle exports for
-Android and `expo-doctor` passes; running on a physical phone via Expo Go is the user's check.
+M1 scaffolding, email login and the session + school context slice are built (2026-10-14). Only
+endpoints marked *Exists* in API_CONTRACT are called. Checks so far: `pnpm verify` passes (121
+tests), the Android bundle exports; running on a physical phone via Expo Go is the user's check.
+**Known until backend B1 ships:** the backend applies the web 30-minute inactivity limit to mobile,
+so a session idle for 30 min ends at the next refresh (expected, not an app bug).
 
 ## Implemented scaffolding (not features)
 
@@ -19,13 +21,24 @@ Android and `expo-doctor` passes; running on a physical phone via Expo Go is the
 |---|---|---|
 | Expo SDK 57, expo-router entry, `app.config.ts`, `eas.json` | root | Implemented (EAS project not linked yet — `eas init`) |
 | Quality gates | `pnpm verify` (ESLint 9, `tsc`, Jest) | Implemented, passing |
-| API client, error mapping, events | `src/api/` | Implemented; auth adapter not attached (no session yet) |
+| API client, error mapping, events | `src/api/` | Implemented; auth adapter attached in `src/bootstrap.ts`. A refresh that fails with an unknown outcome (offline/5xx) now rejects the request instead of ending the session; new `school-suspended` event |
 | Query cache (staleTime classes, tenant-prefixed keys, persisted) | `src/api/`, `src/lib/queryClient.ts`, `src/providers/` | Implemented |
 | Theme tokens (light/dark) | `src/theme/` | Implemented; dark palette is mobile-only, needs review |
 | AD/BS date module | `src/lib/date.ts` | Implemented |
 | Feature registry + visibility rule | `src/features/` | Implemented, registry empty |
-| Session/SecureStore, activation, login, school picker | `src/auth/`, `app/(auth)` | **Not started** — blocked by B1–B3 |
-| i18n, toast, shared components, offline banner, PDF download | — | Not started — libraries not approved yet |
+| Login screen (email only) + activation placeholder | `app/(auth)/login.tsx`, `activate.tsx`, `src/auth/loginForm.ts` | Implemented (2026-10-14). Calls only the existing `POST /identity/login { email, password }`; phone input shows "coming soon" and sends nothing |
+| Token storage (SecureStore, access token also in memory) | `src/auth/tokenStore.ts` | Implemented |
+| Session store, cold-start restore, route guards | `src/auth/session.ts`, `guards.ts`, `tenantStore.ts` | Implemented. Selected school + shell persisted in AsyncStorage (non-secret) |
+| Refresh (single-flight, persist-before-use, proactive at < 60 s via `exp`) | `src/auth/authAdapter.ts`, `jwt.ts` | Implemented; no timers |
+| Logout (`POST /identity/logout`, wipe SecureStore + context + query cache + `pdf-cache`) and forced logout on `unauthorized` | `src/auth/logout.ts`, `SessionEvents.tsx`, `src/lib/files.ts` | Implemented |
+| Context resolution: `/identity/me`, `/tenancy/my-schools` → none / auto / picker, `/tenancy/my-permissions` → shell | `src/auth/useSessionContext.ts`, `resolveShell.ts`, `queries.ts`, `app/(context)/*` | Implemented. `me` is fetched alongside but does not gate navigation. **Guardian shell is unreachable** until backend B4 (`GUARDIAN_ROLE_AVAILABLE = false`) |
+| School errors: `TENANT_MEMBERSHIP_NOT_FOUND` (drop school, refetch), `TENANT_ACCESS_DENIED` / `LICENSE_*` ("school unavailable") | `src/auth/SessionEvents.tsx`, `schoolActions.ts`, `app/(context)/school-unavailable.tsx` | Implemented |
+| Placeholder shells (one tab each, header switcher when both) | `app/teacher/`, `app/guardian/` | Placeholder — tabs will come from the feature registry (M2/M3). Real path segments `/teacher`, `/guardian` (a group `index` would collide with `/`) |
+| i18n (en + ne, local helper, no library) | `src/i18n/` | Implemented; Nepali strings drafted by the assistant, **need native review**; no in-app language switch yet |
+| Shared components `Screen`, `Text`, `TextField`, `PasswordField`, `Button`, `MessageScreen`, `ShellSwitcher`, `ShellPlaceholder` | `src/components/` | Implemented |
+| Activation (QR / code) and phone login | `app/(auth)` | **Not started** — blocked by B3 / B2 |
+| Biometric local unlock, change password | — | Not started |
+| Toast, offline banner, PDF download | — | Not started |
 
 Expo Go is fine for the current empty shell. It cannot handle the `znschool://` scheme, the dev
 client, or later native config, so the activation QR/deep link work (M1 session) needs a dev build.

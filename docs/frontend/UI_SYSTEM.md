@@ -32,6 +32,7 @@ the web CSS variables in the backend repo `apps/web/src/index.css`:
 | `success` | `--color-success` | `#16a34a` |
 | `warning` | `--color-warning` | `#d97706` |
 | `radius` | `--radius` | 8 |
+| `onAccent` | — (mobile-only) | `#ffffff` — text on `accent` surfaces (web uses white button text) |
 
 Dark values are defined alongside (M1). When the web palette changes, update this table and the
 tokens together. Components never use literal colors.
@@ -44,6 +45,10 @@ tokens together. Components never use literal colors.
 |---|---|
 | `Screen` | safe area, header, pull-to-refresh, offline/"as of" banner |
 | `ListScreen` | `FlashList` + empty/loading/error states + pagination |
+| `Text` | themed text (`variant`, `tone`); the only way screens render text — scales with system font size |
+| `Button` | `primary` / `link` variants; `loading` blocks re-press; ≥ 44pt |
+| `MessageScreen` | full-screen title + body + actions (empty, error, blocked states) |
+| `ShellSwitcher`, `ShellPlaceholder` | header action for users with both shells; placeholder body of a shell tab until feature modules land |
 | `Card`, `StatTile` | home summaries |
 | `StatusBadge` | same statuses/colors as web (`present/absent/late/half_day`, `paid/partial/unpaid`, `published/locked`) |
 | `Field`, `TextField`, `PasswordField`, `PhoneField` | forms with `label` / `error` (web `Input` contract) |
