@@ -66,6 +66,22 @@ pnpm android                       # or: pnpm ios
 
 `EXPO_PUBLIC_*` values are bundled into the app — **never put a secret in them**.
 
+### Dependency notes
+
+- **ESLint is pinned to 9.x** (`eslint@^9.39.5`). `eslint-config-expo` pulls in `eslint-plugin-react`
+  and `eslint-plugin-import`, which do not support ESLint 10 yet. `expo install eslint` resolves to
+  10 — do not accept that bump until both plugins list ESLint 10 in their peer range. pnpm marks the
+  9.x line as deprecated; that is expected.
+- **`unrs-resolver` install script is denied** (`allowBuilds` in `pnpm-workspace.yaml`). pnpm 11
+  blocks dependency build scripts by default. This one only compiles an optional native speed-up
+  for the import resolver; linting works without it. Do not run `pnpm approve-builds` for it, and
+  review any new entry pnpm adds to `allowBuilds` before committing it.
+- **Installing dev dependencies on Windows:** PowerShell swallows `--`, so
+  `pnpm exec expo install <pkg> -- --save-dev` fails there. Use `pnpm add -D <pkg>` (then
+  `pnpm exec expo install --check`), or run the `expo install` form from Git Bash.
+- **Tests must not live under `app/`** — expo-router treats every file there as a route. Put them in
+  the root `__tests__/` or next to library code in `src/**/__tests__/`.
+
 ---
 
 ## Scripts (to be created in M1)
