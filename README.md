@@ -5,7 +5,9 @@ The mobile companion app of the **ZN School Operations Platform** — one app fo
 
 ## Status
 
-Planned. No code exists yet. See `docs/project/project-status.md`.
+In Progress — M1 scaffolding only (project config, tooling, API client, cache, theme, dates, feature
+registry). No screens and no session/login yet; those wait for backend B1–B3. See
+`docs/project/project-status.md`.
 
 ---
 
@@ -41,7 +43,9 @@ Access always requires: identity → authentication → active school membership
 | Toasts | one shared toast component (web uses `sonner`; pick one RN equivalent, do not mix) |
 | Tests | Jest + React Native Testing Library; Maestro for E2E flows |
 
-Do not add a library outside this table without following `CLAUDE.md` → Dependency Discipline.
+Do not add a library outside this table without user approval (`CLAUDE.md` §4 Core Approval Rule:
+identify → options → recommendation → consequences → stop). `docs/frontend/UI_SYSTEM.md` also names
+`FlashList` for long lists; it is not installed yet — approve it when the first list screen lands.
 
 ---
 
@@ -53,9 +57,16 @@ builds, a running backend API (see backend repo `README`).
 ```powershell
 pnpm install
 Copy-Item .env.example .env        # then edit EXPO_PUBLIC_API_URL
-pnpm start                         # Metro + Expo dev client
-pnpm android                       # or: pnpm ios
+pnpm exec expo run:android         # first time: native dev build + install (needs Android SDK + JDK 17+)
+pnpm start                         # afterwards: Metro only; open the installed dev client
 ```
+
+**Physical phone with Expo Go (no emulator, no native build):** run `pnpm exec expo start --go` and
+scan the QR with Expo Go; the phone must be on the same Wi-Fi as the PC. Because `expo-dev-client`
+is installed, a plain `pnpm start` targets a dev client — pass `--go` to target Expo Go. Expo Go
+cannot open the `znschool://` scheme, so the activation QR/deep link needs a dev build later.
+`pnpm android` / `pnpm ios` start Metro and open the app on a device that already has the dev build. `android/` and `ios/` are generated
+(Continuous Native Generation) and git-ignored — never edit them by hand; change `app.config.ts`.
 
 ### Environment
 
@@ -84,16 +95,16 @@ pnpm android                       # or: pnpm ios
 
 ---
 
-## Scripts (to be created in M1)
+## Scripts
 
 | Script | Does |
 |---|---|
-| `pnpm start` | Expo dev server |
-| `pnpm android` / `pnpm ios` | Run dev build |
-| `pnpm lint` | ESLint |
+| `pnpm start` | Expo dev server (Metro) |
+| `pnpm android` / `pnpm ios` | Start Metro and open the dev build on a device/emulator |
+| `pnpm lint` | ESLint (`eslint .`) |
 | `pnpm typecheck` | `tsc --noEmit` |
-| `pnpm test` | Jest |
-| `pnpm verify` | lint + typecheck + test |
+| `pnpm test` / `pnpm test:watch` | Jest (`jest-expo` + React Native Testing Library) |
+| `pnpm verify` | lint + typecheck + test — run before declaring work done |
 
 ---
 
