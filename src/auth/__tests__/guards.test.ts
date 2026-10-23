@@ -7,6 +7,7 @@ const base: SessionState = {
   shell: 'teacher',
   shells: ['teacher'],
   blocked: null,
+  blockedReason: null,
   notice: null,
 };
 const go = (href: '/login' | '/resolve'): Guard => ({ kind: 'redirect', href });

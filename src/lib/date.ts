@@ -70,6 +70,34 @@ export function isIsoDate(value: string): boolean {
   return ISO_RE.test(value);
 }
 
+/**
+ * An AD ISO date moved by whole days (negative = earlier), via local date parts so DST and the
+ * device timezone cannot shift it. A malformed input comes back unchanged. Screens never do date
+ * arithmetic themselves.
+ */
+export function shiftIsoDate(iso: string, days: number): string {
+  const match = ISO_RE.exec(iso);
+  if (!match) return iso;
+  return toIsoDate(new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + days));
+}
+
+const MONTH_RE = /^(\d{4})-(\d{2})$/;
+
+/** An AD `YYYY-MM` moved by whole months (negative = earlier). A malformed input comes back unchanged. */
+export function shiftMonth(month: string, months: number): string {
+  const match = MONTH_RE.exec(month);
+  if (!match) return month;
+  const moved = new Date(Number(match[1]), Number(match[2]) - 1 + months, 1);
+  return `${moved.getFullYear()}-${String(moved.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/** "October 2026" for an AD `YYYY-MM` (the month the backend filtered by); the input if malformed. */
+export function formatMonth(month: string): string {
+  const match = MONTH_RE.exec(month);
+  const name = match ? AD_MONTHS[Number(match[2]) - 1] : undefined;
+  return match && name ? `${name} ${match[1]}` : month;
+}
+
 /** BS parts → canonical AD ISO. */
 export function bsToAdIso(year: number, month: number, day: number): string {
   return toIsoDate(new NepaliDate(year, month, day).toJsDate());
@@ -120,4 +148,15 @@ export function formatAlternateDate(iso: string, calendar: CalendarPreference): 
   if (calendar === 'nepali') return isIsoDate(iso) ? iso : null;
   const bs = adIsoToBs(iso);
   return bs ? formatParts(bs) : null;
+}
+
+/**
+ * Device-local "09:42" for today, "2026-10-19 09:42" (tenant calendar) for any other day — the
+ * "updated / saved at" text. Time display must not be formatted inline in a screen.
+ */
+export function formatTimestamp(ms: number, calendar: CalendarPreference): string {
+  const moment = new Date(ms);
+  const time = `${String(moment.getHours()).padStart(2, '0')}:${String(moment.getMinutes()).padStart(2, '0')}`;
+  const iso = toIsoDate(moment);
+  return iso === todayIso() ? time : `${formatDate(iso, calendar)} ${time}`;
 }

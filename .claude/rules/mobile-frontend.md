@@ -65,7 +65,19 @@ New functionality is added as a feature module registered in `src/features/regis
 
 ---
 
-## 9. Accessibility and Low-End Devices
+## 9. Required Skills for UI Work
+
+- Before designing or restyling any screen or shared component, invoke `ui-ux-pro-max`; before
+  finishing it, run `impeccable` (critique / polish / harden as fits) on the result.
+- Invoke `ponytail` for all implementation work; use `ponytail-review` on the diff before
+  declaring a UI task complete.
+- Skill output is translated into `src/theme/tokens.ts` values and existing `src/components`
+  primitives (§1, §6). Do not copy web CSS, hex colors, or new UI libraries into the app.
+- Record any new shared component in `docs/frontend/UI_SYSTEM.md` (§1).
+
+---
+
+## 10. Accessibility and Low-End Devices
 
 - Touch targets ≥ 44pt; screen-reader labels on icon buttons.
 - Long lists use `FlatList`/`FlashList` with stable keys; never `ScrollView` + `map` for rosters.

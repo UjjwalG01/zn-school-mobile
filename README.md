@@ -5,18 +5,18 @@ The mobile companion app of the **ZN School Operations Platform** — one app fo
 
 ## Status
 
-In Progress — M1 scaffolding only (project config, tooling, API client, cache, theme, dates, feature
-registry). No screens and no session/login yet; those wait for backend B1–B3. See
-`docs/project/project-status.md`.
+In progress (M1). The Expo scaffold, email login, secure session and school/role-shell resolution are
+built; no teacher or guardian screen exists yet. See `docs/project/project-status.md`, the phased
+plan in `docs/project/roadmap.md` and the per-phase prompts in `docs/project/PHASE_PROMPTS.md`.
 
 ---
 
 ## What it does
 
-| Audience | v1 (see roadmap M2/M3) | Later |
-|---|---|---|
-| Teacher | My classes/subjects, section attendance, marks entry for exams open to entry, exam routine | Classroom, homework/assignments, lesson planning, question capture by scan |
-| Guardian | Linked children, profile, attendance history, fee position, invoices, payments + receipts, published results + marksheet, exam routine | Notices, push notifications, class timetable |
+| Audience | v1 (see roadmap M2/M3)                                                                                                                 | Later                                                                      |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Teacher  | My classes/subjects, section attendance, own "Mark Present", marks entry for exams open to entry, exam routine                         | Classroom, homework/assignments, lesson planning, question capture by scan |
+| Guardian | Linked children, profile, attendance history, fee position, invoices, payments + receipts, published results + marksheet, exam routine | Notices, push notifications, class timetable                               |
 
 A user can be a teacher **and** a guardian, and can belong to several schools. The app shows the
 shell that matches the roles the user holds in the selected school.
@@ -28,24 +28,22 @@ Access always requires: identity → authentication → active school membership
 
 ## Tech stack
 
-| Concern | Choice |
-|---|---|
-| Runtime | Expo SDK (managed workflow, **dev builds**, EAS Build/Update) |
-| Language | TypeScript (strict) |
-| UI | React Native + React 19 (matches web) |
-| Routing | expo-router (file-based) |
-| Server state | TanStack Query + persisted cache (AsyncStorage persister) |
-| Secure storage | expo-secure-store (tokens only) |
-| Local unlock | expo-local-authentication (optional biometric unlock) |
-| Camera / QR | expo-camera (activation QR; later: question scanning) |
-| PDF | download from reprint endpoints → expo-file-system → OS viewer / expo-sharing |
-| Dates | `nepali-date-converter` (same library and rules as the backend/web) |
-| Toasts | one shared toast component (web uses `sonner`; pick one RN equivalent, do not mix) |
-| Tests | Jest + React Native Testing Library; Maestro for E2E flows |
+| Concern        | Choice                                                                             |
+| -------------- | ---------------------------------------------------------------------------------- |
+| Runtime        | Expo SDK (managed workflow, **dev builds**, EAS Build/Update)                      |
+| Language       | TypeScript (strict)                                                                |
+| UI             | React Native + React 19 (matches web)                                              |
+| Routing        | expo-router (file-based)                                                           |
+| Server state   | TanStack Query + persisted cache (AsyncStorage persister)                          |
+| Secure storage | expo-secure-store (tokens only)                                                    |
+| Local unlock   | expo-local-authentication (optional biometric unlock)                              |
+| Camera / QR    | expo-camera (activation QR; later: question scanning)                              |
+| PDF            | download from reprint endpoints → expo-file-system → OS viewer / expo-sharing      |
+| Dates          | `nepali-date-converter` (same library and rules as the backend/web)                |
+| Toasts         | one shared toast component (web uses `sonner`; pick one RN equivalent, do not mix) |
+| Tests          | Jest + React Native Testing Library; Maestro for E2E flows                         |
 
-Do not add a library outside this table without user approval (`CLAUDE.md` §4 Core Approval Rule:
-identify → options → recommendation → consequences → stop). `docs/frontend/UI_SYSTEM.md` also names
-`FlashList` for long lists; it is not installed yet — approve it when the first list screen lands.
+Do not add a library outside this table without following `CLAUDE.md` → Dependency Discipline.
 
 ---
 
@@ -57,54 +55,31 @@ builds, a running backend API (see backend repo `README`).
 ```powershell
 pnpm install
 Copy-Item .env.example .env        # then edit EXPO_PUBLIC_API_URL
-pnpm exec expo run:android         # first time: native dev build + install (needs Android SDK + JDK 17+)
-pnpm start                         # afterwards: Metro only; open the installed dev client
+pnpm start                         # Metro + Expo dev client
+pnpm android                       # or: pnpm ios
 ```
-
-**Physical phone with Expo Go (no emulator, no native build):** run `pnpm exec expo start --go` and
-scan the QR with Expo Go; the phone must be on the same Wi-Fi as the PC. Because `expo-dev-client`
-is installed, a plain `pnpm start` targets a dev client — pass `--go` to target Expo Go. Expo Go
-cannot open the `znschool://` scheme, so the activation QR/deep link needs a dev build later.
-`pnpm android` / `pnpm ios` start Metro and open the app on a device that already has the dev build. `android/` and `ios/` are generated
-(Continuous Native Generation) and git-ignored — never edit them by hand; change `app.config.ts`.
 
 ### Environment
 
-| Variable | Meaning |
-|---|---|
+| Variable              | Meaning                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------- |
 | `EXPO_PUBLIC_API_URL` | Backend base URL, e.g. `http://192.168.1.10:3001` (a device cannot reach `localhost`) |
-| `EXPO_PUBLIC_APP_ENV` | `development` \| `staging` \| `production` |
+| `EXPO_PUBLIC_APP_ENV` | `development` \| `staging` \| `production`                                            |
 
 `EXPO_PUBLIC_*` values are bundled into the app — **never put a secret in them**.
 
-### Dependency notes
-
-- **ESLint is pinned to 9.x** (`eslint@^9.39.5`). `eslint-config-expo` pulls in `eslint-plugin-react`
-  and `eslint-plugin-import`, which do not support ESLint 10 yet. `expo install eslint` resolves to
-  10 — do not accept that bump until both plugins list ESLint 10 in their peer range. pnpm marks the
-  9.x line as deprecated; that is expected.
-- **`unrs-resolver` install script is denied** (`allowBuilds` in `pnpm-workspace.yaml`). pnpm 11
-  blocks dependency build scripts by default. This one only compiles an optional native speed-up
-  for the import resolver; linting works without it. Do not run `pnpm approve-builds` for it, and
-  review any new entry pnpm adds to `allowBuilds` before committing it.
-- **Installing dev dependencies on Windows:** PowerShell swallows `--`, so
-  `pnpm exec expo install <pkg> -- --save-dev` fails there. Use `pnpm add -D <pkg>` (then
-  `pnpm exec expo install --check`), or run the `expo install` form from Git Bash.
-- **Tests must not live under `app/`** — expo-router treats every file there as a route. Put them in
-  the root `__tests__/` or next to library code in `src/**/__tests__/`.
-
 ---
 
-## Scripts
+## Scripts (to be created in M1)
 
-| Script | Does |
-|---|---|
-| `pnpm start` | Expo dev server (Metro) |
-| `pnpm android` / `pnpm ios` | Start Metro and open the dev build on a device/emulator |
-| `pnpm lint` | ESLint (`eslint .`) |
-| `pnpm typecheck` | `tsc --noEmit` |
-| `pnpm test` / `pnpm test:watch` | Jest (`jest-expo` + React Native Testing Library) |
-| `pnpm verify` | lint + typecheck + test — run before declaring work done |
+| Script                      | Does                    |
+| --------------------------- | ----------------------- |
+| `pnpm start`                | Expo dev server         |
+| `pnpm android` / `pnpm ios` | Run dev build           |
+| `pnpm lint`                 | ESLint                  |
+| `pnpm typecheck`            | `tsc --noEmit`          |
+| `pnpm test`                 | Jest                    |
+| `pnpm verify`               | lint + typecheck + test |
 
 ---
 
@@ -129,4 +104,5 @@ docs/                   project documentation (this kit)
 
 ## Documentation
 
-Start with `CLAUDE.md`, then `docs/project/project-status.md` and `docs/project/roadmap.md`.
+Start with `CLAUDE.md`, then `docs/project/project-status.md` and `docs/project/roadmap.md`. For
+the next phase, use its prompt in `docs/project/PHASE_PROMPTS.md`.

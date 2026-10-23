@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import { focusManager, QueryClient } from '@tanstack/react-query';
+import { focusManager, type Query, QueryClient } from '@tanstack/react-query';
 import { AppState, type AppStateStatus } from 'react-native';
 
 import { STALE_TIME } from '../api/staleTime';
@@ -25,6 +25,14 @@ export function createQueryClient(): QueryClient {
     },
   });
 }
+
+/**
+ * Which queries reach the disk: the successful ones, except a query that sets `meta: { persist: false }`.
+ * That is how data about other people (a student's guardians' phone numbers, health data) stays in
+ * memory only, and is gone when the app is closed (docs/project/STUDENT_INFO_PLAN.md, SI-D3).
+ */
+export const shouldPersistQuery = (query: Pick<Query, 'state' | 'meta'>): boolean =>
+  query.state.status === 'success' && query.meta?.persist !== false;
 
 export const queryPersister = createAsyncStoragePersister({
   storage: AsyncStorage,

@@ -8,8 +8,11 @@ access: Read
 
 ## Status
 
-Planned. Nothing in this kit is implemented. Prepared 2026-10-14 from the main repository
-`zn-school-platform-v1` (the "backend repo").
+Prepared 2026-10-14 from the main repository `zn-school-platform-v1` (the "backend repo"); updated
+2026-10-16. The kit is now in use: a mobile repo exists with the app scaffold, and the kit is kept in
+two places (here and in the mobile repo's `docs/`). After a phase changes `roadmap.md`,
+`project-status.md` or `API_CONTRACT.md`, copy the changed file to the other copy so they stay
+identical (suggested practice, not an approved rule).
 
 ---
 
@@ -40,16 +43,16 @@ Copy-Item -Path .\docs\mobile-app\.claude -Destination ..\zn-school-mobile -Recu
 
 # 2. Decided (user, 2026-10-14)
 
-| # | Decision |
-|---|---|
-| D1 | One app for **teachers and guardians**; the visible shell depends on the user's roles in the selected school. |
-| D2 | Same backend, same database, same users — no separate mobile backend, no data copies (SSOT). |
-| D3 | Guardian (and any user) logs in with **phone or email** + password. |
-| D4 | First-time linking uses a **short activation code + QR** built on the existing invite/activate flow. |
-| D5 | Teacher access to attendance/marks is **restricted to assigned classes/subjects by the backend** (web and mobile alike). |
-| D6 | Stack: **Expo (dev builds) + expo-router + TanStack Query (persisted) + expo-secure-store + TypeScript**. |
-| D7 | Long mobile sessions (target 7–10 days of inactivity) to avoid repeated logins. |
-| D8 | Guardian/teacher **reads** should be served from a Postgres **read replica** when one exists. |
+| #   | Decision                                                                                                                 |
+| --- | ------------------------------------------------------------------------------------------------------------------------ |
+| D1  | One app for **teachers and guardians**; the visible shell depends on the user's roles in the selected school.            |
+| D2  | Same backend, same database, same users — no separate mobile backend, no data copies (SSOT).                             |
+| D3  | Guardian (and any user) logs in with **phone or email** + password.                                                      |
+| D4  | First-time linking uses a **short activation code + QR** built on the existing invite/activate flow.                     |
+| D5  | Teacher access to attendance/marks is **restricted to assigned classes/subjects by the backend** (web and mobile alike). |
+| D6  | Stack: **Expo (dev builds) + expo-router + TanStack Query (persisted) + expo-secure-store + TypeScript**.                |
+| D7  | Long mobile sessions (7 days of inactivity by default, no absolute cap; backend ADR-0066) to avoid repeated logins.     |
+| D8  | Guardian/teacher **reads** should be served from a Postgres **read replica** when one exists.                            |
 
 ---
 
@@ -58,6 +61,11 @@ Copy-Item -Path .\docs\mobile-app\.claude -Destination ..\zn-school-mobile -Recu
 D3, D4, D5, D7 and D8 each require **backend changes and an ADR in the backend repo**. They are
 listed with recommended options in `docs/backend/BACKEND_PREREQUISITES.md`. Under the backend
 repo's `CLAUDE.md` §3–4 none of them may be implemented until the user approves the ADR.
+
+Status of those decisions (2026-10-16): D5 is built for attendance (ADR-0062, class-teacher scope and
+`attendance.mark_any`) and open for marks; D3, D4, D7 are not built (WP-1); D8 is not built (WP-6).
+The work is grouped into WP-1…WP-7 in `docs/project/roadmap.md` §2, and each has a ready prompt in
+`docs/project/PHASE_PROMPTS.md`.
 
 The mobile repo must **not** build a feature against a backend endpoint that is still "Proposed".
 Use mocks only behind an explicit `MOCK_API` flag, and never ship them.
@@ -69,7 +77,8 @@ Use mocks only behind an explicit `MOCK_API` flag, and never ship them.
 1. `CLAUDE.md`
 2. `docs/project/project-status.md`
 3. `docs/project/roadmap.md`
-4. `docs/backend/BACKEND_PREREQUISITES.md` (what is not available yet)
+4. `docs/backend/BACKEND_PREREQUISITES.md` (what is not available yet), then
+   `docs/project/PHASE_PROMPTS.md` for the prompt of the phase you are about to run
 5. `docs/architecture/ARCHITECTURE.md`
 6. `docs/architecture/AUTH_AND_SESSION.md`
 7. `docs/api/API_CONTRACT.md`
@@ -82,16 +91,16 @@ Use mocks only behind an explicit `MOCK_API` flag, and never ship them.
 
 Read from the backend repo when a task touches them (do not copy — they evolve there):
 
-| Topic | Backend repo path |
-|---|---|
-| Endpoints | `docs/api/ENDPOINTS.md` |
-| Auth | `docs/adr/0003-authentication-strategy.md`, `docs/adr/0022-session-inactivity-timeout.md`, `docs/security/authentication.md` |
-| Tenancy | `docs/architecture/multi-tenancy.md`, `docs/adr/0004-tenant-isolation-phase-1-scope.md` |
-| Permission hint | `docs/adr/0038-client-side-permission-hint.md` |
-| Licensing | `docs/adr/0008-tenant-entitlements.md`, `docs/adr/0035-tenant-license-and-tier-management.md` |
-| Errors | `docs/adr/0017-backend-error-code-taxonomy.md`, `apps/api/src/common/errors/error-codes.ts` |
-| Academic | `docs/domain/academic/ACADEMIC_ARCHITECTURE.md`, `docs/adr/0037-academic-marksheet-routine-and-platform-exam-override.md` |
-| Guardian | `docs/domain/student/GUARDIAN_ARCHITECTURE.md`, ADR-0025/0026/0027/0059 |
-| Dates | `docs/frontend/date-system.md` |
-| Documents/PDF | `docs/adr/0036-document-engine.md`, `docs/adr/0044-document-reprint-identity-and-copy-numbering.md` |
-| Web API client (to port) | `apps/web/src/lib/api-client.ts`, `apps/web/src/lib/auth.tsx` |
+| Topic                    | Backend repo path                                                                                                            |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| Endpoints                | `docs/api/ENDPOINTS.md`                                                                                                      |
+| Auth                     | `docs/adr/0003-authentication-strategy.md`, `docs/adr/0022-session-inactivity-timeout.md`, `docs/security/authentication.md` |
+| Tenancy                  | `docs/architecture/multi-tenancy.md`, `docs/adr/0004-tenant-isolation-phase-1-scope.md`                                      |
+| Permission hint          | `docs/adr/0038-client-side-permission-hint.md`                                                                               |
+| Licensing                | `docs/adr/0008-tenant-entitlements.md`, `docs/adr/0035-tenant-license-and-tier-management.md`                                |
+| Errors                   | `docs/adr/0017-backend-error-code-taxonomy.md`, `apps/api/src/common/errors/error-codes.ts`                                  |
+| Academic                 | `docs/domain/academic/ACADEMIC_ARCHITECTURE.md`, `docs/adr/0037-academic-marksheet-routine-and-platform-exam-override.md`    |
+| Guardian                 | `docs/domain/student/GUARDIAN_ARCHITECTURE.md`, ADR-0025/0026/0027/0059                                                      |
+| Dates                    | `docs/frontend/date-system.md`                                                                                               |
+| Documents/PDF            | `docs/adr/0036-document-engine.md`, `docs/adr/0044-document-reprint-identity-and-copy-numbering.md`                          |
+| Web API client (to port) | `apps/web/src/lib/api-client.ts`, `apps/web/src/lib/auth.tsx`                                                                |

@@ -1,18 +1,28 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTheme } from '../theme/useTheme';
 
 export interface ScreenProps {
   children: ReactNode;
+  /** Pull-to-refresh is on only when `onRefresh` is given. */
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
 
 /**
  * Safe area + keyboard avoidance + scroll, so content stays reachable at large font sizes.
- * Header, pull-to-refresh and the offline banner (UI_SYSTEM §2) are added when a screen needs them.
+ * Pull-to-refresh is opt-in; header and the offline banner (UI_SYSTEM §2) are added when a screen
+ * needs them.
  */
-export function Screen({ children }: ScreenProps) {
+export function Screen({ children, refreshing = false, onRefresh }: ScreenProps) {
   const { colors, spacing } = useTheme();
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: colors.bg }]}>
@@ -23,6 +33,9 @@ export function Screen({ children }: ScreenProps) {
         <ScrollView
           contentContainerStyle={[styles.content, { padding: spacing.lg, gap: spacing.lg }]}
           keyboardShouldPersistTaps="handled"
+          refreshControl={
+            onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> : undefined
+          }
         >
           {children}
         </ScrollView>

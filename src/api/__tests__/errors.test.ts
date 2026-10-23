@@ -1,4 +1,4 @@
-import { ApiError, defaultErrorMessage, errorAction, parseErrorBody } from '../errors';
+import { ApiError, defaultErrorMessage, errorAction, errorActionOf, parseErrorBody } from '../errors';
 
 describe('parseErrorBody', () => {
   it('reads the backend envelope', () => {
@@ -41,6 +41,11 @@ describe('errorAction', () => {
     expect(action(404, 'DOCUMENT_NOT_ISSUED')).toBe('not-issued');
   });
 
+  it('treats every 409 as a conflict, including ones without a CONCURRENCY code', () => {
+    expect(action(409, 'ATTENDANCE_ALREADY_RECORDED')).toBe('conflict');
+    expect(action(409)).toBe('conflict'); // same idempotency key, different body
+  });
+
   it('falls back to the status when there is no specific code', () => {
     expect(action(401)).toBe('session-expired');
     expect(action(403)).toBe('forbidden');
@@ -52,5 +57,15 @@ describe('errorAction', () => {
   it('branches on errorCode, not on message text', () => {
     const error = new ApiError(400, 'TENANT_ACCESS_DENIED', undefined);
     expect(errorAction(error)).toBe('validation');
+  });
+});
+
+describe('errorActionOf', () => {
+  it('maps an ApiError like errorAction and anything else to unknown', () => {
+    expect(errorActionOf(new ApiError(0, 'x', 'NETWORK_ERROR'))).toBe('offline');
+    expect(errorActionOf(new ApiError(403, 'x', 'ENTITLEMENT_DENIED'))).toBe('feature-denied');
+    expect(errorActionOf(new Error('boom'))).toBe('unknown');
+    expect(errorActionOf(null)).toBe('unknown');
+    expect(errorActionOf(undefined)).toBe('unknown');
   });
 });

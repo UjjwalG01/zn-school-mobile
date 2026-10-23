@@ -23,8 +23,8 @@ export function SessionEvents() {
       onApiEvent('school-suspended', () => {
         if (signedIn()) setBlocked('suspended');
       }),
-      onApiEvent('license-blocked', () => {
-        if (signedIn()) setBlocked('license');
+      onApiEvent('license-blocked', ({ errorCode }) => {
+        if (signedIn()) setBlocked('license', errorCode);
       }),
     ];
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe());

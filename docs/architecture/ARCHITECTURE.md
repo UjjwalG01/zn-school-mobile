@@ -8,8 +8,10 @@ access: Read
 
 ## Status
 
-Designed (2026-10-14). Not implemented. Decisions marked **Proposed** need user approval before
-code depends on them.
+Designed (2026-10-14), re-checked against the backend 2026-10-16. The scaffolding (client, cache,
+theme, session, school/shell resolution) is built in the mobile repo — see
+`docs/project/project-status.md`; no feature screen exists yet. Decisions marked **Proposed** need
+user approval before code depends on them.
 
 ---
 
@@ -59,8 +61,9 @@ login → GET /identity/me
       → GET /tenancy/my-schools           (0 → "no school access" screen; 1 → auto-select; n → picker)
       → GET /tenancy/my-permissions?tenantId=
       → resolve shells for that school:
-           teacher shell  if user holds a staff role with teacher capabilities (B5 assignments exist
-                          or attendance.mark / exam_result.save permission)
+           teacher shell  if the membership is linked to an active staff member (ADR-0062) or the
+                          user holds attendance.mark / exam_result.save (the exact rule is confirmed
+                          in the WP-2/WP-3 ADR; the app treats it as a UX hint, the backend decides)
            guardian shell if user holds the guardian-audience role (B4)
            both → shell switcher in the header
            neither (e.g. accountant only) → "use the web app" screen
@@ -77,6 +80,13 @@ expo-router file-based groups: `(auth)`, `(teacher)`, `(guardian)`. Each shell i
 tabs come from the **feature registry** (see `FEATURE_MODULES.md`), not hardcoded. Deep links use
 the `znschool://` scheme (activation, later notifications).
 
+**Teacher shell (built 2026-10-21, `docs/project/TEACHER_APP_PLAN.md`; unit-tested, not yet run on a device):** five
+tabs from the registry — Dashboard, Attendance (subtabs Student Attendance and My Attendance, an in-screen control,
+no extra navigation library), Academic (a hub), More (placeholder) and Profile. Profile and More are always visible.
+A school switch clears the shell, so the tab navigator is unmounted and rebuilt for the new school (with its
+permissions) and nested screens of the previous school do not survive. Tab icons come
+from `@expo/vector-icons` (owner decision 2026-10-21).
+
 ---
 
 # 5. Data layer and caching
@@ -85,6 +95,15 @@ the `znschool://` scheme (activation, later notifications).
 - **Persisted cache** (AsyncStorage persister, throttled writes, versioned buster key = app
   version) so cold start renders cached data instantly, then revalidates per `staleTime` class
   (`.claude/rules/api-and-data.md` §5).
+- **Keeping a query off the disk (2026-10-22, owner decision SI-D3).** A query that sets `meta: { persist: false }` is
+  held in memory for the session and never written to the persisted cache (`shouldPersistQuery` in
+  `src/lib/queryClient.ts`, used by `QueryProvider`). It is how data about other people stays off the phone: the teacher's
+  Student details (guardians' phone numbers, health data). It is still removed by key prefix on a school switch and
+  sign-out. A request function keeps only the fields its screens read (`src/api/academic.ts`, `src/api/portal.ts`), so a
+  field the screen never shows cannot reach any cache.
+- **Planned, not built (2026-10-22):** wiping a school's cached data when access is revoked (ADR-0065 D8). The rule to
+  build (wipe on a revocation shown by a fresh permission check, or on every plain 403) is open decision A14; see
+  `docs/project/DEFERRED_WORK_REQUIREMENTS.md` §1.
 - `refetchOnWindowFocus` → replaced by app-foreground refetch, throttled to once per 60 s, and only
   for stale queries.
 - No polling anywhere.
@@ -92,14 +111,14 @@ the `znschool://` scheme (activation, later notifications).
 
 Load-reduction summary (why the app is light on the server):
 
-| Measure | Effect |
-|---|---|
-| Long mobile session (B1) | no repeated logins; one refresh per ~15 min of active use |
-| `/portal/*/home` aggregates (B7) | one request on app open instead of 4–6 |
-| Bulk attendance (B6) | 1 request per section instead of N |
-| Persisted cache + staleTime | most screens open without a request |
-| Reprint PDFs cached on device | PDF rendered once server-side, downloaded once |
-| Read replica (B9) | guardian traffic off the primary |
+| Measure                          | Effect                                                    |
+| -------------------------------- | --------------------------------------------------------- |
+| Long mobile session (B1)         | no repeated logins; one refresh per ~15 min of active use |
+| `/portal/*/home` aggregates (B7) | one request on app open instead of 4–6                    |
+| Bulk attendance (B6)             | 1 request per section instead of N                        |
+| Persisted cache + staleTime      | most screens open without a request                       |
+| Reprint PDFs cached on device    | PDF rendered once server-side, downloaded once            |
+| Read replica (B9)                | guardian traffic off the primary                          |
 
 ---
 
@@ -141,13 +160,17 @@ Publishing shared types (or OpenAPI codegen) is a backend decision — Proposed,
 
 # 10. Decision table
 
-| # | Decision | Status |
-|---|---|---|
-| A1 | Expo managed + dev builds + EAS | Decided (user, 2026-10-14) |
-| A2 | expo-router | Decided |
-| A3 | TanStack Query + persisted cache as the only server-state store | Decided |
-| A4 | expo-secure-store for tokens | Decided |
-| A5 | No local database (SQLite) until M6 | Proposed |
-| A6 | Hand-written API types until backend offers shared types/OpenAPI | Proposed |
-| A7 | Crash reporting provider | Open (decide in M1) |
-| A8 | Push provider (Expo push vs FCM direct) | Open (M4) |
+| #   | Decision                                                            | Status                     |
+| --- | ------------------------------------------------------------------- | -------------------------- |
+| A1  | Expo managed + dev builds + EAS                                     | Decided (user, 2026-10-14) |
+| A2  | expo-router                                                         | Decided                    |
+| A3  | TanStack Query + persisted cache as the only server-state store     | Decided                    |
+| A4  | expo-secure-store for tokens                                        | Decided                    |
+| A5  | No local database (SQLite) until M6                                 | Proposed                   |
+| A6  | Hand-written API types until backend offers shared types/OpenAPI    | Proposed                   |
+| A7  | Crash reporting provider                                            | Open (decide in M1)        |
+| A8  | Push provider (Expo push vs FCM direct)                             | **Decided 2026-10-18: Expo push** (backend ADR-0069) |
+| A9  | Minimum OS versions and store identifiers (bundle id, package name) | Open (M1 release setup)    |
+
+Backend-side decisions that affect the app (guardian seat counting, per-exam "hide from guardians",
+replica hosting, partial marks entry) are numbered A10–A13 in `docs/project/roadmap.md` §12.

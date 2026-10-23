@@ -9,7 +9,11 @@ access: Read
 ## Status
 
 Designed. Depends on backend B1 (mobile sessions), B2 (phone login), B3 (activation code) —
-all **Proposed**. Today's backend behavior is noted where it differs.
+all **Proposed and not built** (verified 2026-10-16; they are backend work package WP-1). Today's
+backend behavior is noted where it differs. In the mobile repo the parts that need no new backend
+are built (email login, SecureStore tokens, single-flight refresh, logout, school/shell resolution);
+activation, phone login, biometric unlock and change password remain — see `project-status.md` and
+M1 in `docs/project/roadmap.md`.
 
 ---
 
@@ -38,7 +42,7 @@ App: "Activate account"
 - A user who already has a password (e.g. a teacher joining a 2nd school, or a teacher who is also
   a guardian) activates with the code only; the password field is hidden when the backend says it is
   not required.
-- Codes are single use, 7-day expiry, attempt-limited (backend).
+- Codes are single use, 8 characters, **24-hour** expiry, entered with the phone or email on record, and attempt-limited per account (backend ADR-0067).
 
 ---
 
@@ -59,14 +63,14 @@ POST /identity/login { identifier, password, clientType: 'mobile' }    (B1+B2)
 
 # 4. Session lifetime (B1)
 
-| Token | Lifetime | Where |
-|---|---|---|
-| Access | 15 min | memory (+ SecureStore for cold start) |
-| Refresh | 30 days absolute, rotated on every refresh | SecureStore |
-| Inactivity (mobile) | `mobile_session_timeout_minutes`, target 7 days (max 10) | enforced by backend at refresh |
+| Token               | Lifetime                                                 | Where                                 |
+| ------------------- | -------------------------------------------------------- | ------------------------------------- |
+| Access              | 15 min                                                   | memory (+ SecureStore for cold start) |
+| Refresh             | 30 days per token, rotated on every refresh (each rotation issues a fresh token) | SecureStore                           |
+| Inactivity (mobile) | `mobile_session_timeout_minutes`, default 7 days (max 7, no absolute cap; ADR-0066) | enforced by backend at refresh        |
 
-Effect: a guardian opening the app at least weekly never re-enters a password for up to 30 days;
-then one login.
+Effect: a guardian opening the app at least weekly never re-enters a password: each refresh issues a fresh 30-day
+token and there is no absolute session cap (backend ADR-0066).
 
 Today (before B1) the backend applies the web inactivity limit (default 30 min) to mobile too —
 M1 must not ship to real users before B1.

@@ -7,6 +7,7 @@ import {
   PERSIST_MAX_AGE_MS,
   queryPersister,
   setupForegroundRefetch,
+  shouldPersistQuery,
 } from '../lib/queryClient';
 
 setupForegroundRefetch();
@@ -23,7 +24,7 @@ export function QueryProvider({ children }: { children: ReactNode }) {
         maxAge: PERSIST_MAX_AGE_MS,
         // A new app version drops the old cache, so a changed response shape can't hit new code.
         buster: Constants.expoConfig?.version ?? '0',
-        dehydrateOptions: { shouldDehydrateQuery: (query) => query.state.status === 'success' },
+        dehydrateOptions: { shouldDehydrateQuery: shouldPersistQuery },
       }}
     >
       {children}

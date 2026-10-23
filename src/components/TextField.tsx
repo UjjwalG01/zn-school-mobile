@@ -35,9 +35,9 @@ export function TextField({ label, error, endAdornment, ref, ...input }: TextFie
         ]}
       >
         <TextInput
+          accessibilityLabel={label}
           {...input}
           ref={ref}
-          accessibilityLabel={label}
           placeholderTextColor={colors.textMuted}
           style={[
             styles.input,

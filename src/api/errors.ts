@@ -81,7 +81,9 @@ export function errorAction(error: ApiError): ApiErrorAction {
   if (errorCode === 'TENANT_ACCESS_DENIED') return 'school-suspended';
   if (errorCode && LICENSE_BLOCK_CODES.has(errorCode)) return 'license-blocked';
   if (errorCode === 'ENTITLEMENT_DENIED') return 'feature-denied';
-  if (errorCode === 'CONCURRENCY_VERSION_CONFLICT') return 'conflict';
+  // Any 409 means "something changed or the idempotency key was reused": refetch and re-apply.
+  // ATTENDANCE_ALREADY_RECORDED and the key-reuse 409 carry no CONCURRENCY_* code.
+  if (errorCode === 'CONCURRENCY_VERSION_CONFLICT' || status === 409) return 'conflict';
   if (errorCode === 'AUTH_TOO_MANY_ATTEMPTS' || status === 429) return 'wait';
   if (errorCode === 'AUTH_CURRENT_PASSWORD_INCORRECT') return 'field-error';
   if (errorCode === 'DOCUMENT_NOT_ISSUED') return 'not-issued';
@@ -90,4 +92,9 @@ export function errorAction(error: ApiError): ApiErrorAction {
   if (status === 400) return 'validation';
   if (status >= 500) return 'server';
   return 'unknown';
+}
+
+/** `errorAction` for anything a query can throw; a non-API error is `unknown`. */
+export function errorActionOf(error: unknown): ApiErrorAction {
+  return error instanceof ApiError ? errorAction(error) : 'unknown';
 }

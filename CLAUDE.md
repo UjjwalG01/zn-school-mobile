@@ -136,7 +136,34 @@ Report failures faithfully with output.
 
 ---
 
-# 9. Shell
+# 9. Required Skills and Plugins
+
+Enabled for this project in `.claude/settings.json`: `ponytail@ponytail`,
+`impeccable@impeccable`, `ui-ux-pro-max@ui-ux-pro-max-skill`. Invoke them with the Skill tool
+instead of working from memory.
+
+| Work | Skill to use |
+|---|---|
+| Any code: write, refactor, fix, review | `ponytail` (YAGNI, stdlib/Expo first, no unrequested abstractions) |
+| Reviewing a diff for over-engineering | `ponytail-review` |
+| Periodic repo-wide cleanup | `ponytail-audit`, `ponytail-debt` |
+| New screens, components, layout, navigation UX, empty/error/loading states | `ui-ux-pro-max`, then `impeccable` |
+| Critiquing, polishing, hardening, animating, adapting or colorizing existing UI | `impeccable` |
+
+Limits (these skills advise; they do not override this file):
+
+- Both design skills are web-leaning (CSS/Tailwind/shadcn). Translate their advice to React Native.
+  Colors, spacing, radius and typography still come only from `src/theme/tokens.ts`
+  (`.claude/rules/mobile-frontend.md` §6).
+- A design skill may not introduce a new component library, font package, animation library or
+  native module. That is an architectural decision (§4) — propose it and stop.
+- `ponytail` never justifies skipping the §8 checks, tenant-prefixed query keys, or error handling
+  required by the rules. Reuse-first (top of this file) still applies before any new code.
+- If a skill's advice conflicts with the Authority Hierarchy (§2), the hierarchy wins.
+
+---
+
+# 10. Shell
 
 The developer uses Windows / PowerShell. Verify every example command for PowerShell syntax before
 giving it.

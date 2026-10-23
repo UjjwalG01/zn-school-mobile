@@ -21,6 +21,8 @@ export interface SessionState {
   /** Shells available for the selected school (drives the switcher). */
   shells: Shell[];
   blocked: SchoolBlock | null;
+  /** Backend error code behind a `license` block; names the reason on the "School unavailable" screen. */
+  blockedReason: string | null;
   notice: SessionNotice | null;
 }
 
@@ -30,6 +32,7 @@ const INITIAL: SessionState = {
   shell: null,
   shells: [],
   blocked: null,
+  blockedReason: null,
   notice: null,
 };
 
@@ -63,7 +66,7 @@ export async function restoreSession(): Promise<void> {
     const tokens = await loadTokens();
     if (!tokens) return update({ status: 'signed-out' });
     const { tenantId, shell } = await loadContext();
-    update({ status: 'signed-in', tenantId, shell, shells: [], blocked: null, notice: null });
+    update({ status: 'signed-in', tenantId, shell, shells: [], blocked: null, blockedReason: null, notice: null });
   } catch {
     update({ status: 'signed-out' });
   }
@@ -71,7 +74,15 @@ export async function restoreSession(): Promise<void> {
 
 /** After a successful login (tokens already saved). */
 export function startSession(): void {
-  update({ status: 'signed-in', tenantId: null, shell: null, shells: [], blocked: null, notice: null });
+  update({
+    status: 'signed-in',
+    tenantId: null,
+    shell: null,
+    shells: [],
+    blocked: null,
+    blockedReason: null,
+    notice: null,
+  });
 }
 
 /** Local end of a session; the caller wipes storage/caches (`logout.ts`). */
@@ -80,12 +91,18 @@ export function endSession(notice: SessionNotice | null = null): void {
 }
 
 export function selectTenant(tenantId: string): void {
-  update({ tenantId, shell: state.tenantId === tenantId ? state.shell : null, shells: [], blocked: null });
+  update({
+    tenantId,
+    shell: state.tenantId === tenantId ? state.shell : null,
+    shells: [],
+    blocked: null,
+    blockedReason: null,
+  });
   persistContext();
 }
 
 export function clearTenant(): void {
-  update({ tenantId: null, shell: null, shells: [], blocked: null });
+  update({ tenantId: null, shell: null, shells: [], blocked: null, blockedReason: null });
   persistContext();
 }
 
@@ -95,8 +112,9 @@ export function setShells(shells: Shell[], shell: Shell | null): void {
   if (changed) persistContext();
 }
 
-export function setBlocked(blocked: SchoolBlock | null): void {
-  update({ blocked });
+/** `reason` is the backend error code of a `license` block (kept only while blocked). */
+export function setBlocked(blocked: SchoolBlock | null, reason: string | null = null): void {
+  update({ blocked, blockedReason: blocked ? reason : null });
 }
 
 export function clearNotice(): void {
