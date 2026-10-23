@@ -69,6 +69,8 @@ evidence and acceptance table: `docs/project/CALENDAR_AND_EXAM_ATTENDANCE_PLAN.m
 | More tab becomes a hub (`stack: true`) | `app/teacher/more/`, `src/features/teacher/more/` | built; the Academic hub lists Exam attendance with no code change (registry-driven) |
 | Language switch (Profile) | `src/i18n/index.ts`, `src/components/LanguageSwitch.tsx`, `app/_layout.tsx`, `src/features/unsavedWork.ts` | built; remembered on the device, read before the first screen, asks before re-mounting over unsaved edits |
 
+The Orbis layout (next section) restyled the screens of this section's features (header, event rows, buttons) without changing what they do.
+
 **Checks (2026-10-23).** `pnpm typecheck` clean, `pnpm lint` clean, `pnpm test` 75 suites / 710 tests, `expo export --platform android` OK. The
 server contract (the permissions the default teacher receives, the calendar, the exam list, rosters, `sectionId`, 403 for the other roles) was
 **Reproduced over HTTP against the phone-test stack** (`zn_school_mobile_test`, container `zn-mobile-test-api` recreated from the new backend image);
@@ -83,6 +85,37 @@ change is in the plan §8.
 **Protected documents.** `docs/backend/BACKEND_PREREQUISITES.md` §17 was added because the brief named backend prerequisites explicitly. Not
 edited, proposed in the plan §8: `docs/architecture/FEATURE_MODULES.md` (the More hub, the new manifests and access constants),
 `docs/project/roadmap.md` (notices and calendar are no longer "future").
+
+## Orbis layout, branding and dashboard charts (2026-10-23; built and unit-tested; not run on a phone; nothing committed)
+
+**Brief.** The owner asked for the sign-in screen and the inside pages to follow the Stellar UI kit references (Sign-In, Calendar), the
+layouts reusable for every future page, the app named **Orbis** with a placeholder logo and educational motifs in the header, the web
+palette, and simple charts on the teacher dashboard. Design rules and how to add a page: `docs/frontend/UI_SYSTEM.md` §8.
+
+| Area | Where | State |
+| --- | --- | --- |
+| Sign-in and Activate layout (banner with logo, name, title; form on the sheet) | `src/components/AuthScreen.tsx`, `app/(auth)/{login,activate}.tsx` | built; logic of both screens unchanged |
+| Page header for every screen (back arrow, title, action; curved brand header with motifs) | `src/components/{CurvedHeader,BrandHeader,HeaderBackdrop}.tsx`, `brandHeaderOptions` spread by `app/teacher/**/_layout.tsx` and `app/guardian/_layout.tsx` | built; `useHeaderOptions` was removed (the navigation header is now this one) |
+| Full-screen states and the school picker | `src/components/MessageScreen.tsx`, `app/(context)/school-picker.tsx` | built; the title moved into the header |
+| Brand name and placeholder logo | `auth.brand` = Orbis (en, ne), `name` in `app.config.ts`, `assets/brand/logo.png`, `BrandLogo` | built; the logo is a generated placeholder to replace |
+| Pill button, rounder cards and fields, tinted cards, date badge | `Button`, `Card` (`tint`), `TextField`, `DateBadge`, `radius.xl/sheet`, `withAlpha` in `src/theme/tokens.ts` | built |
+| Calendar event rows (date badge + tinted card) | `CalendarScreen`, `formatDayMonth` in `src/lib/date.ts` | built |
+| Dashboard charts: marks entry progress, subjects by class | `src/components/{StackedBar,BarChart}.tsx`, `src/features/teacher/home/sections/ChartsSection.tsx`, `progressTotals`, `subjectsPerClass` | built; drawn from the two reads Home already makes (no extra request), no new dependency |
+
+**Checks (2026-10-23).** `pnpm verify` green: lint and typecheck clean, 79 suites / 731 tests; `expo export --platform android` OK (the logo
+asset is in the bundle). **Not run on a phone** (decision D10), so nobody has seen the curves, the motifs, the status-bar icon colour, the
+sign-in layout with the keyboard open, large fonts or dark mode on a real screen: those are the owner's checks. Two things only a device
+shows: whether the header's top-right/bottom-left curves look as the references do, and whether the faint motifs are visible enough.
+
+**Decisions the owner may want to revisit.**
+- `app.config.ts` is protected; only its display `name` changed ("ZN School" to "Orbis"), on the owner's explicit instruction. The slug,
+  scheme and bundle identifiers are unchanged. The app icon and splash image are still the Expo template ones (the brief named the logo only).
+- Charts are plain `View`s. A chart library or `react-native-svg` would be a new dependency (CLAUDE.md §4) and was not added.
+- Not built, because it needs one more request on the Dashboard's first load: a "my attendance this month" chart (the data is
+  `GET /attendance/staff/self`, already read by My Attendance). Say so if you want it.
+- The `ui-ux-pro-max` and `ponytail` plugins were installed for this project on 2026-10-23 (project scope; `impeccable` is enabled in
+  `.claude/settings.json` but not installed for this repository yet). They load only after `/reload-plugins` or a new session, so this
+  work followed their rules from the installed files; `impeccable` and `ponytail-review` were **not** run on the result.
 
 ## Implemented scaffolding (not features)
 

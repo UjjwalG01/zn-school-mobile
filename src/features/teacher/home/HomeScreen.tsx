@@ -31,6 +31,7 @@ import { ATTENDANCE_TAB_HREF, rosterHref } from '../attendance/routes';
 import { useTeacherExams, useTeacherMyClasses } from '../queries';
 import { buildExamCards, returnedCount } from './homeModel';
 import { AttendanceSection } from './sections/AttendanceSection';
+import { MarksProgressChart, SubjectsByClassChart } from './sections/ChartsSection';
 import { MarksSection } from './sections/MarksSection';
 import { SubjectsSection } from './sections/SubjectsSection';
 
@@ -63,11 +64,11 @@ function HomeHeader({
   );
 }
 
-/** A count over a label on a card (the summary row). Two fit a phone row; a third wraps under them. */
-function StatTile({ value, label }: { value: number; label: string }) {
+/** A count over a label on a tinted card (the summary row). Two fit a phone row; a third wraps under them. */
+function StatTile({ value, label, tint }: { value: number; label: string; tint: string }) {
   return (
     <View style={{ flex: 1, minWidth: 140 }}>
-      <Card accessibilityLabel={`${label}: ${value}`}>
+      <Card tint={tint} accessibilityLabel={`${label}: ${value}`}>
         <Text variant="headline">{String(value)}</Text>
         <Text variant="caption" tone="muted">
           {label}
@@ -80,7 +81,7 @@ function StatTile({ value, label }: { value: number; label: string }) {
 export default function HomeScreen() {
   const router = useRouter();
   const { tenantId } = useSession();
-  const { spacing } = useTheme();
+  const { colors, spacing } = useTheme();
   const me = useMe();
   const school = useMySchools().data?.find((candidate) => candidate.tenantId === tenantId);
   const calendar = useTenantSettings().data?.calendarPreference;
@@ -119,11 +120,15 @@ export default function HomeScreen() {
       {returned > 0 ? <Banner tone="warning">{t('home.returned', { count: returned })}</Banner> : null}
       {classes.data ? (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-          <StatTile value={classes.data.classes.length} label={t('dashboard.classes')} />
-          <StatTile value={classes.data.subjects.length} label={t('dashboard.subjects')} />
-          {showMarks && exams.data ? <StatTile value={cards.length} label={t('dashboard.openExams')} /> : null}
+          <StatTile value={classes.data.classes.length} label={t('dashboard.classes')} tint={colors.accent} />
+          <StatTile value={classes.data.subjects.length} label={t('dashboard.subjects')} tint={colors.success} />
+          {showMarks && exams.data ? (
+            <StatTile value={cards.length} label={t('dashboard.openExams')} tint={colors.warning} />
+          ) : null}
         </View>
       ) : null}
+      {showMarks && exams.data ? <MarksProgressChart cards={cards} /> : null}
+      {classes.data ? <SubjectsByClassChart subjects={classes.data.subjects} /> : null}
       {showAttendance ? (
         <AttendanceSection
           query={classes}

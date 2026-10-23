@@ -22,7 +22,7 @@ export function Banner({ tone, children }: BannerProps) {
           backgroundColor: warning ? colors.warning : colors.card,
           borderColor: warning ? colors.warning : colors.border,
           borderRadius: radius.lg,
-          padding: spacing.md,
+          paddingVertical: spacing.md,
         },
       ]}
     >

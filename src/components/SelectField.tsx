@@ -99,7 +99,7 @@ export function SelectField({
             style={[StyleSheet.absoluteFill, { backgroundColor: colors.text, opacity: 0.4 }]}
           />
           <SafeAreaView style={[styles.sheet, { backgroundColor: colors.bg, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg }]}>
-            <View style={[styles.sheetHeader, { padding: spacing.lg, gap: spacing.md }]}>
+            <View style={[styles.sheetHeader, { paddingVertical: spacing.lg, gap: spacing.md }]}>
               <Text variant="title" accessibilityRole="header" style={styles.value}>
                 {label}
               </Text>

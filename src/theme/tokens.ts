@@ -57,8 +57,17 @@ export const darkColors: ColorTokens = {
 
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;
 
-/** `--radius` is 0.5rem on the web = 8. */
-export const radius = { sm: 4, md: 6, lg: 8, pill: 999 } as const;
+/**
+ * `--radius` is 0.5rem on the web = 8 (`sm`..`lg`). `xl` (cards, fields) and `sheet` (the header's curved corner)
+ * are mobile-only, from the Orbis layout (UI_SYSTEM §8).
+ */
+export const radius = { sm: 4, md: 6, lg: 8, xl: 16, sheet: 32, pill: 999 } as const;
+
+/** `#rrggbb` + an opacity (0..1) → `#rrggbbaa`: a tint or an overlay made from a palette colour, never a new colour. */
+export function withAlpha(hex: string, opacity: number): string {
+  const alpha = Math.round(Math.min(Math.max(opacity, 0), 1) * 255);
+  return `${hex}${alpha.toString(16).padStart(2, '0')}`;
+}
 
 export const typography = {
   caption: { fontSize: 12, lineHeight: 16 },

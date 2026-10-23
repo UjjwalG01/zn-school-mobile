@@ -36,6 +36,10 @@ the web CSS variables in the backend repo `apps/web/src/index.css`:
 Dark values are defined alongside (M1). When the web palette changes, update this table and the
 tokens together. Components never use literal colors.
 
+Mobile-only additions (2026-10-23, §8): `radius.xl` (16: cards, fields), `radius.sheet` (32: the header's curved corner) and
+`withAlpha(hex, opacity)` for a tint or overlay made from a palette colour (a tinted card, the faint header motifs). The
+brand blue (`brand`, the web sidebar colour) is the header; `accent` stays the action colour.
+
 ---
 
 # 2. Shared components (build once in `src/components`)
@@ -65,8 +69,8 @@ Student Attendance / My Attendance; the screen renders it above its scrolling ar
 built on it), and tab icons from `@expo/vector-icons` (the Ionicons set only, imported
 from `@expo/vector-icons/Ionicons` so no other icon font is bundled; one explicit dependency approved by the owner on
 2026-10-21; a tab always keeps its text label, the icon is never the only signal). The tab bar takes its colours from the
-tokens, and so do the navigation headers (`useHeaderOptions` in `src/theme/useTheme.ts`: card surface and text colour, so a
-header follows the dark scheme). The active tab shows the filled glyph (`home`) and the others the outline
+tokens, and so do the navigation headers (since 2026-10-23 the brand header of §8, `brandHeaderOptions`; it replaced
+`useHeaderOptions`, and the brand colour is the same in both schemes). The active tab shows the filled glyph (`home`) and the others the outline
 (`home-outline`), so the state is not carried by colour alone. A tappable `Card` ends in a chevron; a static card, and
 the flat muted "Coming soon" rows of the Academic hub, do not, so a row that does nothing never looks like a button.
 The Dashboard's count tile (a number over a label on a `Card`) is a local component of `HomeScreen`, because one screen
@@ -156,3 +160,52 @@ UI work uses the project-enabled skills (see `CLAUDE.md` §9 and `.claude/rules/
 The skills are web-leaning: take the principles (hierarchy, spacing rhythm, states, motion,
 accessibility), then express them with §1 tokens and §2 components. No literal colors, no new UI or
 animation libraries, no new fonts without approval. Any new shared component is listed in §2.
+
+---
+
+# 8. Orbis layout (page chrome)
+
+Built 2026-10-23 from the Stellar UI kit references (Sign-In and Calendar) in the web palette; unit-tested, **not yet seen on a
+device**. The app is named **Orbis** (`auth.brand`, `name` in `app.config.ts`; the platform it belongs to is still ZN School).
+
+**The shape.** A brand-coloured header carrying faint educational motifs. Its bottom-left corner is rounded, and the screen under
+it starts with a rounded top-right corner that the brand colour shows behind (`radius.sheet`). `CurvedHeader` draws both, and
+both layouts below are built on it, so they cannot drift apart.
+
+| Component | Use |
+| --- | --- |
+| `AuthScreen` | every signed-out screen (Sign in, Activate): the banner holds the logo, the app name and the screen title; the form sits on the sheet below. Scrolls, so the keyboard and large fonts never hide the form |
+| `BrandHeader` | the page header: back arrow (only when there is a screen under it), title, an optional action at the end |
+| `brandHeaderOptions` | `screenOptions` for any Stack or Tabs navigator: the header is the screen's `title` option, its back arrow comes from the stack, its action from `headerRight` (use `<ShellSwitcher inverse />`) |
+| `MessageScreen` | a full-screen state (empty, error, blocked, loading): `BrandHeader` with the title, then the text and actions |
+| `DateBadge` | the round "01 / Mar" badge, ring and light fill in a palette colour; the date is also in the row beside it (the badge is hidden from screen readers). Dates come from `formatDayMonth` in `src/lib/date.ts` (the school's calendar, AD or BS) |
+| `Card tint={colors.x}` | the pastel card of the references: the colour at 14% over the screen, no border; the text keeps the default colour, and the card still says what it is in words |
+| `BarChart`, `StackedBar` | see Charts below |
+
+**Adding a page.** Register the feature (`src/features/registry.ts`), add its route file, and make sure its layout spreads
+`brandHeaderOptions` and gives the screen a `title` (`<Stack.Screen options={{ title: t('…') }} />`; a screen that learns its
+title later sets it with `<Stack.Screen options={{ title }} />` as the roster does). Compose the page from `Screen` or
+`ListScreen` and the primitives in §2. A page outside any navigator places `<BrandHeader title>` above its `Screen` (as
+`MessageScreen` and the school picker do). Never draw a header of your own.
+
+**Brand assets.** Logo: replace `assets/brand/logo.png` (square, transparent, a light mark, around 512 px: it sits on the brand
+colour); nothing else changes, and `BrandLogo` hides it from screen readers because the name is always text beside it. The
+current file is a placeholder. Backdrop: `HeaderBackdrop` lists Ionicons motifs (school, book, globe, …) at 10% opacity; to use
+artwork instead, replace its body with an `<Image>`. The status bar icons are light app-wide (root layout), because every
+screen starts with this header in both schemes. A screen that must not start with it needs its own status-bar decision.
+
+**Shape of the rest.** The primary `Button` is a pill; `Card`, `TextField` and the month grid's day cells use `radius.xl`.
+
+**Charts.** `BarChart` compares counts across items (one bar each, from zero, the label and value above the bar so long class
+names do not squeeze it); `StackedBar` splits one whole into states (a 100% stacked bar with a legend of counts). Both are
+plain `View`s: a chart library or an SVG module would be a new dependency (CLAUDE.md §4). Rules they follow (from the
+`dataviz` and `ui-ux-pro-max` guidance):
+- Show counts of what the backend returned. Never compute a business rule for a chart.
+- Every state has a text label and a count, so colour is never the only signal; colours come from tokens, and the status
+  colours (`success`, `warning`) are used only for states that mean that.
+- Each chart is announced as text (the stacked bar as one "Submitted: 5, Returned: 1, …"; each bar as "Class 8 · A: 3").
+- No pie or donut (they read badly with more than a few parts and need a non-pie fallback); no dual axes.
+- Do not read `.value` straight inside a `style` prop (destructure first): Reanimated's Babel plugin takes it for a shared value
+  and injects a require of Reanimated, which fails under Jest and loads the library at runtime.
+Used on the teacher Dashboard: marks entry progress (`StackedBar`) and subjects by class (`BarChart`), both from the reads the
+screen already makes (no extra request).

@@ -12,9 +12,11 @@ export interface ButtonProps {
   /** In-flight: blocks further presses and shows a spinner (CLAUDE rule: no double submit). */
   loading?: boolean;
   disabled?: boolean;
+  /** A `link` on the brand-coloured header (the shell switcher): light text instead of the accent. */
+  inverse?: boolean;
 }
 
-export function Button({ title, onPress, variant = 'primary', loading, disabled }: ButtonProps) {
+export function Button({ title, onPress, variant = 'primary', loading, disabled, inverse }: ButtonProps) {
   const { colors, spacing, radius } = useTheme();
   const inactive = disabled || loading;
   const primary = variant === 'primary';
@@ -31,7 +33,7 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled 
           minHeight: primary ? MIN_TOUCH_TARGET + spacing.sm : MIN_TOUCH_TARGET,
           paddingHorizontal: spacing.lg,
           gap: spacing.sm,
-          borderRadius: radius.lg,
+          borderRadius: radius.pill,
           backgroundColor: primary ? colors.accent : 'transparent',
           opacity: inactive ? DISABLED_OPACITY : pressed ? 0.85 : 1,
         },
@@ -40,7 +42,7 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled 
       {loading ? <ActivityIndicator color={primary ? colors.onAccent : colors.accent} /> : null}
       <Text
         variant="bodyLarge"
-        tone={primary ? 'default' : 'brand'}
+        tone={primary ? 'default' : inverse ? 'inverse' : 'brand'}
         style={[styles.title, primary && { color: colors.onAccent }]}
       >
         {title}

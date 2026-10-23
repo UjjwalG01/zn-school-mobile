@@ -5,8 +5,7 @@ export const en = {
   'common.hide': 'Hide',
   'common.back': 'Back',
 
-  'auth.brand': 'ZN School',
-  'auth.tagline': 'Sign in to your school',
+  'auth.brand': 'Orbis',
   'auth.identifier.label': 'Phone or email',
   'auth.password.label': 'Password',
   'auth.submit': 'Sign in',
@@ -167,6 +166,9 @@ export const en = {
   'dashboard.classes': 'Classes',
   'dashboard.subjects': 'Subjects',
   'dashboard.openExams': 'Open exams',
+  'dashboard.marksProgress': 'Marks entry progress',
+  'dashboard.marksProgressSummary': '{done} of {total} subjects submitted',
+  'dashboard.subjectsByClass': 'Subjects by class',
 
   'academic.exams': 'Open exams',
   'academic.comingSoon': 'Coming soon',

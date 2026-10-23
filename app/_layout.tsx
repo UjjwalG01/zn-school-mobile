@@ -37,7 +37,8 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }} />
       </Fragment>
       <ToastHost />
-      <StatusBar style="auto" />
+      {/* Every screen starts with the brand-coloured header (CurvedHeader), in both schemes, so the icons are always light. */}
+      <StatusBar style="light" />
     </QueryProvider>
   );
 }

@@ -38,7 +38,7 @@ export function SegmentedControl<T extends string>({
           backgroundColor: colors.card,
           borderColor: colors.border,
           borderRadius: radius.lg,
-          padding: spacing.xs,
+          paddingVertical: spacing.xs,
           gap: spacing.xs,
         },
       ]}

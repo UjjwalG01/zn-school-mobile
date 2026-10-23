@@ -1,6 +1,11 @@
 // Pure view-model for the teacher Home screen. Everything here is presentation of backend state
 // (a count, a sort order, a label); no marks or attendance rule lives in the app.
-import type { SubmissionStatus, TeacherExam, TeacherExamSubject } from '../../../api/types/portal';
+import type {
+  SubmissionStatus,
+  TeacherExam,
+  TeacherExamSubject,
+  TeacherSubjectAssignment,
+} from '../../../api/types/portal';
 import type { BadgeTone } from '../../../components/StatusBadge';
 import { placementLabel } from '../placement';
 
@@ -72,6 +77,27 @@ export function buildExamCards(exams: readonly TeacherExam[]): ExamCard[] {
 /** Subjects returned for correction across all cards (the warning banner count). */
 export const returnedCount = (cards: readonly ExamCard[]) =>
   cards.reduce((sum, card) => sum + card.subjects.filter((s) => s.progress === 'returned').length, 0);
+
+/** How many subjects (across every exam card) are in each state, for the marks progress chart. */
+export function progressTotals(cards: readonly ExamCard[]): { total: number; counts: Record<SubjectProgress, number> } {
+  const counts: Record<SubjectProgress, number> = { notStarted: 0, draft: 0, submitted: 0, returned: 0 };
+  for (const card of cards) for (const subject of card.subjects) counts[subject.progress] += 1;
+  return { total: counts.notStarted + counts.draft + counts.submitted + counts.returned, counts };
+}
+
+/** The teacher's subject assignments counted per class and section, most first, for the teaching load chart. */
+export function subjectsPerClass(
+  subjects: readonly TeacherSubjectAssignment[],
+): { key: string; label: string; value: number }[] {
+  const rows = new Map<string, { key: string; label: string; value: number }>();
+  for (const subject of subjects) {
+    const key = `${subject.classId}:${idPart(subject.sectionId)}`;
+    const row = rows.get(key) ?? { key, label: placementLabel(subject), value: 0 };
+    row.value += 1;
+    rows.set(key, row);
+  }
+  return [...rows.values()].sort((a, b) => b.value - a.value || a.label.localeCompare(b.label));
+}
 
 /** First `max` items plus how many were left out ("+N more"). */
 export function capList<T>(items: readonly T[], max = 5) {

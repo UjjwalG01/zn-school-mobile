@@ -31,7 +31,7 @@ export function Screen({ children, refreshing = false, onRefresh }: ScreenProps)
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={[styles.content, { padding: spacing.lg, gap: spacing.lg }]}
+          contentContainerStyle={[styles.content, { paddingVertical: spacing.lg, gap: spacing.lg }]}
           keyboardShouldPersistTaps="handled"
           refreshControl={
             onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> : undefined

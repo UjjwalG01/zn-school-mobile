@@ -5,7 +5,9 @@ import {
   bsToAdIso,
   daysInBsMonth,
   formatAlternateDate,
+  BS_MONTHS,
   formatDate,
+  formatDayMonth,
   formatMonth,
   formatTimestamp,
   shiftIsoDate,
@@ -33,6 +35,26 @@ describe('shiftMonth / formatMonth', () => {
   it('names the AD month', () => {
     expect(formatMonth('2026-10')).toBe('October 2026');
     expect(formatMonth('2026-01')).toBe('January 2026');
+  });
+});
+
+describe('formatDayMonth', () => {
+  it('gives the AD day and the first three letters of the month', () => {
+    expect(formatDayMonth('2026-03-01', 'gregorian')).toEqual({ day: '01', month: 'Mar' });
+    expect(formatDayMonth('2026-12-25', 'gregorian')).toEqual({ day: '25', month: 'Dec' });
+  });
+
+  it('gives the BS day and month name for a school on the Nepali calendar', () => {
+    const bs = adIsoToBs('2026-10-23')!;
+    expect(formatDayMonth('2026-10-23', 'nepali')).toEqual({
+      day: String(bs.date).padStart(2, '0'),
+      month: BS_MONTHS[bs.month]!.slice(0, 3),
+    });
+  });
+
+  it('falls back to AD outside the BS range, and returns a malformed date as it came', () => {
+    expect(formatDayMonth('1900-01-05', 'nepali')).toEqual({ day: '05', month: 'Jan' });
+    expect(formatDayMonth('nope', 'gregorian')).toEqual({ day: 'nope', month: '' });
   });
 });
 

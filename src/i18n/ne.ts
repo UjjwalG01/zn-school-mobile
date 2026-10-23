@@ -6,8 +6,7 @@ export const ne: Record<MessageKey, string> = {
   'common.hide': 'लुकाउनुहोस्',
   'common.back': 'फर्कनुहोस्',
 
-  'auth.brand': 'ZN School',
-  'auth.tagline': 'आफ्नो विद्यालयमा साइन इन गर्नुहोस्',
+  'auth.brand': 'Orbis',
   'auth.identifier.label': 'फोन वा इमेल',
   'auth.password.label': 'पासवर्ड',
   'auth.submit': 'साइन इन गर्नुहोस्',
@@ -172,6 +171,9 @@ export const ne: Record<MessageKey, string> = {
   'dashboard.classes': 'कक्षाहरू',
   'dashboard.subjects': 'विषयहरू',
   'dashboard.openExams': 'खुला परीक्षा',
+  'dashboard.marksProgress': 'अङ्क प्रविष्टिको प्रगति',
+  'dashboard.marksProgressSummary': '{total} मध्ये {done} विषय बुझाइयो',
+  'dashboard.subjectsByClass': 'कक्षाअनुसार विषयहरू',
 
   'academic.exams': 'खुला परीक्षा',
   'academic.comingSoon': 'चाँडै आउँदैछ',

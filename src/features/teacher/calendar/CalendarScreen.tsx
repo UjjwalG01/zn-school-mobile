@@ -7,13 +7,21 @@ import { Pressable, View } from 'react-native';
 import type { CalendarItem, Notice } from '../../../api/types/calendar';
 import { Button } from '../../../components/Button';
 import { Card } from '../../../components/Card';
+import { DateBadge } from '../../../components/DateBadge';
 import { OfflineBanner, savedDataTimestamp } from '../../../components/OfflineBanner';
 import { QueryState, queryView } from '../../../components/QueryState';
 import { Screen } from '../../../components/Screen';
 import { Stepper } from '../../../components/Stepper';
 import { Text } from '../../../components/Text';
 import { t } from '../../../i18n';
-import { type CalendarPreference, formatDate, formatTimestamp, shiftIsoDate, todayIso } from '../../../lib/date';
+import {
+  type CalendarPreference,
+  formatDate,
+  formatDayMonth,
+  formatTimestamp,
+  shiftIsoDate,
+  todayIso,
+} from '../../../lib/date';
 import { useTheme } from '../../../theme/useTheme';
 import { useRefreshSchoolsOnFeatureDenied } from '../../featureDenied';
 import { useTenantSettings } from '../../queries';
@@ -48,17 +56,16 @@ function rangeText(item: CalendarItem, calendar: CalendarPreference): string {
   return item.endDate === item.startDate ? start : t('calendar.range', { from: start, to: formatDate(item.endDate, calendar) });
 }
 
+/** A date badge and a tinted card, as the Calendar reference lists events. The kind is written in the card, so colour is not the only signal. */
 function ItemCard({ item, calendar }: { item: CalendarItem; calendar: CalendarPreference }) {
   const { colors, spacing } = useTheme();
+  const color = colorFor(item.color, colors);
+  const { day, month } = formatDayMonth(item.startDate, calendar);
   return (
-    <Card>
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }}>
-        <View
-          style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: colorFor(item.color, colors) }}
-          accessibilityElementsHidden
-          importantForAccessibility="no"
-        />
-        <View style={{ flex: 1, gap: spacing.xs }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+      <DateBadge day={day} month={month} color={color} />
+      <View style={{ flex: 1 }}>
+        <Card tint={color}>
           <Text variant="bodyLarge" style={{ fontWeight: '600' }}>
             {item.title}
           </Text>
@@ -66,9 +73,9 @@ function ItemCard({ item, calendar }: { item: CalendarItem; calendar: CalendarPr
             {[t(KIND_KEY[item.kind]), item.typeLabel, rangeText(item, calendar)].filter((part, i, all) => part && all.indexOf(part) === i).join(' · ')}
           </Text>
           {item.description ? <Text variant="body">{item.description}</Text> : null}
-        </View>
+        </Card>
       </View>
-    </Card>
+    </View>
   );
 }
 

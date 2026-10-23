@@ -69,7 +69,7 @@ const Day = memo(function Day({ cell, dayItems, off, isToday, isSelected, calend
         style={[
           styles.cell,
           {
-            borderRadius: radius.lg,
+            borderRadius: radius.xl,
             borderColor: isToday ? colors.accent : 'transparent',
             backgroundColor: isSelected ? colors.accent : 'transparent',
           },

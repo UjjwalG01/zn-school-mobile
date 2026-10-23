@@ -149,21 +149,52 @@ describe('teacher Home', () => {
     expect(screen.getByText('Everest School')).toBeTruthy();
     expect(screen.getByText(new RegExp(todayIso()))).toBeTruthy();
 
-    await waitFor(() => expect(screen.getByText('Class 8 · A')).toBeTruthy());
+    // The class name is on its Attendance card and again as a bar of the subjects chart.
+    await waitFor(() => expect(screen.getAllByText('Class 8 · A').length).toBeGreaterThan(0));
     expect(screen.getByText('Attendance')).toBeTruthy();
     expect(screen.getByText('Class 6')).toBeTruthy(); // a class with no sections has no " · section"
 
     await waitFor(() => expect(screen.getByText('Second Terminal')).toBeTruthy());
     expect(screen.getByText('2083 · Class 8 · A')).toBeTruthy();
-    expect(screen.getByText('Returned')).toBeTruthy();
-    expect(screen.getByText('Not started')).toBeTruthy();
-    expect(screen.getByText('Submitted')).toBeTruthy();
+    // Each state is a badge on its subject and a legend entry of the progress chart.
+    expect(screen.getAllByText('Returned').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Not started').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Submitted').length).toBeGreaterThan(0);
     expect(screen.getByText('Returned for correction: 1')).toBeTruthy();
 
     expect(screen.getByText('My subjects')).toBeTruthy();
     expect(screen.getByText('Mathematics — Class 8 · A')).toBeTruthy();
     // Sign out and Switch school moved to the Profile tab.
     expect(screen.queryByRole('button', { name: 'Sign out' })).toBeNull();
+  });
+
+  it('charts the marks entry progress and the subjects per class from the reads it already made', async () => {
+    seed();
+    await render(<HomeScreen />, { wrapper });
+
+    // EXAMS holds one subject returned, one not started and one submitted.
+    expect(await screen.findByText('Marks entry progress')).toBeTruthy();
+    expect(screen.getByText('1 of 3 subjects submitted')).toBeTruthy();
+    expect(
+      screen.getByLabelText('Submitted: 1, Returned: 1, Draft: 0, Not started: 1'),
+    ).toBeTruthy();
+
+    // MY_CLASSES gives the teacher one subject, in Class 8 · A.
+    expect(screen.getByText('Subjects by class')).toBeTruthy();
+    expect(screen.getByLabelText('Class 8 · A: 1')).toBeTruthy();
+    // Charting adds no request: the same two reads feed the tiles, the lists and the charts.
+    expect(getTeacherMyClasses).toHaveBeenCalledTimes(1);
+    expect(getTeacherExams).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows no marks chart without exams, and no subject chart without assignments', async () => {
+    seed({ modules: ['fees'], permissions: [] });
+    jest.mocked(getTeacherMyClasses).mockResolvedValue({ restricted: true, classes: [], subjects: [] });
+    await render(<HomeScreen />, { wrapper });
+
+    await waitFor(() => expect(screen.getByLabelText('Classes: 0')).toBeTruthy());
+    expect(screen.queryByText('Marks entry progress')).toBeNull();
+    expect(screen.queryByText('Subjects by class')).toBeNull();
   });
 
   it('shows summary tiles from the cached reads, and no shortcut block (the tab bar is the way to the other tabs)', async () => {
@@ -189,7 +220,7 @@ describe('teacher Home', () => {
     seed({ calendar: null });
     jest.mocked(getTenantSettings).mockReturnValue(new Promise(() => undefined));
     await render(<HomeScreen />, { wrapper });
-    await waitFor(() => expect(screen.getByText('Class 8 · A')).toBeTruthy());
+    await waitFor(() => expect(screen.getAllByText('Class 8 · A').length).toBeGreaterThan(0));
     expect(screen.queryByText(new RegExp(todayIso()))).toBeNull();
   });
 
@@ -302,8 +333,9 @@ describe('teacher Home', () => {
     seed({ mobileModules: [{ moduleKey: 'exams', visible: false }] });
     await render(<HomeScreen />, { wrapper });
 
-    await waitFor(() => expect(screen.getByText('Class 8 · A')).toBeTruthy());
+    await waitFor(() => expect(screen.getAllByText('Class 8 · A').length).toBeGreaterThan(0));
     expect(screen.queryByText('Marks entry')).toBeNull();
+    expect(screen.queryByText('Marks entry progress')).toBeNull();
     expect(getTeacherExams).not.toHaveBeenCalled();
   });
 
@@ -317,7 +349,7 @@ describe('teacher Home', () => {
     await render(<HomeScreen />, { wrapper });
 
     await waitFor(() => expect(screen.getByText(/Showing saved data from/)).toBeTruthy());
-    expect(screen.getByText('Class 8 · A')).toBeTruthy();
+    expect(screen.getAllByText('Class 8 · A').length).toBeGreaterThan(0);
     expect(screen.getByText('Second Terminal')).toBeTruthy();
     expect(screen.queryByText(/Could not reach the server/)).toBeNull();
     expect(screen.queryByText(/^Updated/)).toBeNull();

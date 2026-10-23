@@ -6,9 +6,9 @@ import { login } from '../../src/api/identity';
 import { classifyIdentifier, loginErrorKey } from '../../src/auth/loginForm';
 import { clearNotice, startSession, useSession } from '../../src/auth/session';
 import { saveTokens } from '../../src/auth/tokenStore';
+import { AuthScreen } from '../../src/components/AuthScreen';
 import { Button } from '../../src/components/Button';
 import { PasswordField } from '../../src/components/PasswordField';
-import { Screen } from '../../src/components/Screen';
 import { Text } from '../../src/components/Text';
 import { TextField } from '../../src/components/TextField';
 import { t } from '../../src/i18n';
@@ -68,22 +68,13 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen>
-      <View style={{ paddingVertical: spacing.xxl, gap: spacing.xs }}>
-        <Text variant="headline" tone="brand" accessibilityRole="header">
-          {t('auth.brand')}
-        </Text>
-        <Text variant="bodyLarge" tone="muted">
-          {t('auth.tagline')}
-        </Text>
-      </View>
-
+    <AuthScreen title={t('auth.submit')}>
       <View style={{ gap: spacing.lg }}>
         {notice === 'session-expired' ? (
           <View
             accessibilityRole="alert"
             style={{
-              padding: spacing.md,
+              paddingVertical: spacing.md,
               borderWidth: 1,
               borderRadius: radius.lg,
               borderColor: colors.warning,
@@ -98,7 +89,7 @@ export default function LoginScreen() {
             accessibilityRole="alert"
             accessibilityLiveRegion="assertive"
             style={{
-              padding: spacing.md,
+              paddingVertical: spacing.md,
               borderWidth: 1,
               borderRadius: radius.lg,
               borderColor: colors.destructive,
@@ -141,6 +132,6 @@ export default function LoginScreen() {
         onPress={() => router.push('/activate')}
         disabled={submitting}
       />
-    </Screen>
+    </AuthScreen>
   );
 }

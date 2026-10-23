@@ -4,13 +4,14 @@ import { Redirect, Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 
 import { useGuard } from '../../src/auth/guards';
+import { brandHeaderOptions } from '../../src/components/BrandHeader';
 import { ShellSwitcher } from '../../src/components/ShellSwitcher';
 import { featureRegistry } from '../../src/features/registry';
 import { routeName } from '../../src/features/routes';
 import { useVisibilityContext } from '../../src/features/useVisibleFeatures';
 import { visibleTabs } from '../../src/features/visibility';
 import { t } from '../../src/i18n';
-import { useHeaderOptions, useTheme } from '../../src/theme/useTheme';
+import { useTheme } from '../../src/theme/useTheme';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -25,7 +26,6 @@ const teacherTabs = featureRegistry.filter(
 export default function TeacherLayout() {
   const guard = useGuard('teacher');
   const { colors } = useTheme();
-  const header = useHeaderOptions();
   const context = useVisibilityContext('teacher');
   if (guard.kind === 'wait') return null;
   if (guard.kind === 'redirect') return <Redirect href={guard.href} />;
@@ -38,8 +38,8 @@ export default function TeacherLayout() {
     // the new school's are built fresh; a roster of the previous school cannot outlive the switch.
     <Tabs
       screenOptions={{
-        ...header,
-        headerRight: () => <ShellSwitcher />,
+        ...brandHeaderOptions,
+        headerRight: () => <ShellSwitcher inverse />,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },

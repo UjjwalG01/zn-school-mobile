@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 
 import { useTheme } from '../theme/useTheme';
+import { BrandHeader } from './BrandHeader';
 import { Screen } from './Screen';
 import { Text } from './Text';
 
@@ -12,22 +13,20 @@ export interface MessageScreenProps {
   children?: ReactNode;
 }
 
-/** Full-screen state: title + explanation + actions (empty, error, blocked states). */
+/** Full-screen state: the title in the brand header, then the explanation and actions (empty, error, blocked states). */
 export function MessageScreen({ title, body, children }: MessageScreenProps) {
   const { spacing } = useTheme();
   return (
-    <Screen>
-      <View style={{ paddingTop: spacing.xxl, gap: spacing.sm }}>
-        <Text variant="title" accessibilityRole="header">
-          {title}
-        </Text>
+    <View style={{ flex: 1 }}>
+      <BrandHeader title={title} />
+      <Screen>
         {body ? (
           <Text variant="bodyLarge" tone="muted">
             {body}
           </Text>
         ) : null}
-      </View>
-      {children ? <View style={{ gap: spacing.sm }}>{children}</View> : null}
-    </Screen>
+        {children ? <View style={{ gap: spacing.sm }}>{children}</View> : null}
+      </Screen>
+    </View>
   );
 }

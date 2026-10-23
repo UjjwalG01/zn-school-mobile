@@ -1,4 +1,4 @@
-import { darkColors, lightColors, MIN_TOUCH_TARGET, radius } from '../tokens';
+import { darkColors, lightColors, MIN_TOUCH_TARGET, radius, withAlpha } from '../tokens';
 
 describe('theme tokens', () => {
   it('defines the same keys in light and dark', () => {
@@ -22,6 +22,13 @@ describe('theme tokens', () => {
       border: '#e0e0e0',
     });
     expect(radius.lg).toBe(8);
+  });
+
+  it('builds a tint from a palette colour', () => {
+    expect(withAlpha('#2563eb', 1)).toBe('#2563ebff');
+    expect(withAlpha('#2563eb', 0.5)).toBe('#2563eb80');
+    expect(withAlpha('#2563eb', 0)).toBe('#2563eb00');
+    expect(withAlpha('#2563eb', 7)).toBe('#2563ebff'); // clamped
   });
 
   it('keeps the accessibility touch target at 44pt', () => {

@@ -29,7 +29,7 @@ export function TextField({ label, error, endAdornment, ref, ...input }: TextFie
             minHeight: MIN_TOUCH_TARGET + spacing.sm,
             backgroundColor: colors.card,
             borderColor: error ? colors.destructive : colors.border,
-            borderRadius: radius.lg,
+            borderRadius: radius.xl,
             paddingStart: spacing.md,
           },
         ]}

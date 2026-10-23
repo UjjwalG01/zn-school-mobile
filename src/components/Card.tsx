@@ -2,11 +2,16 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { MIN_TOUCH_TARGET } from '../theme/tokens';
+import { MIN_TOUCH_TARGET, withAlpha } from '../theme/tokens';
 import { useTheme } from '../theme/useTheme';
+
+/** A tinted card is the tint colour at this opacity over the screen, with no border. */
+const TINT_OPACITY = 0.14;
 
 export interface CardProps {
   children: ReactNode;
+  /** A palette colour (e.g. `colors.success`) that tints the card, as the Calendar's event rows are. Text keeps the default colour. */
+  tint?: string;
   /** Makes the whole card a button (≥ 44pt) with a trailing chevron. Leave undefined for a static summary card. */
   onPress?: () => void;
   /** Screen-reader label; required in practice when `onPress` is set. */
@@ -15,13 +20,13 @@ export interface CardProps {
   emphasis?: 'warning' | 'danger';
 }
 
-export function Card({ children, onPress, accessibilityLabel, emphasis }: CardProps) {
+export function Card({ children, tint, onPress, accessibilityLabel, emphasis }: CardProps) {
   const { colors, spacing, radius } = useTheme();
   const surface = {
-    backgroundColor: colors.card,
+    backgroundColor: tint ? withAlpha(tint, TINT_OPACITY) : colors.card,
     borderColor: emphasis === 'danger' ? colors.destructive : emphasis === 'warning' ? colors.warning : colors.border,
-    borderWidth: emphasis ? 2 : StyleSheet.hairlineWidth,
-    borderRadius: radius.lg,
+    borderWidth: emphasis ? 2 : tint ? 0 : StyleSheet.hairlineWidth,
+    borderRadius: radius.xl,
     padding: spacing.md,
     gap: spacing.xs,
   };

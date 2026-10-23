@@ -143,6 +143,20 @@ export function formatDate(iso: string, calendar: CalendarPreference): string {
   return iso;
 }
 
+/**
+ * The day of the month and the first three letters of the month name, in the tenant's calendar: the two lines of a
+ * date badge ("01" over "Mar"). Falls back to AD when BS is requested but the date is outside the converter's range.
+ */
+export function formatDayMonth(iso: string, calendar: CalendarPreference): { day: string; month: string } {
+  const bs = calendar === 'nepali' ? adIsoToBs(iso) : null;
+  const ad = ISO_RE.exec(iso);
+  if (!bs && !ad) return { day: iso, month: '' };
+  const monthIndex = bs ? bs.month : Number(ad![2]) - 1;
+  const day = bs ? bs.date : Number(ad![3]);
+  const names: readonly string[] = bs ? BS_MONTHS : AD_MONTHS;
+  return { day: String(day).padStart(2, '0'), month: names[monthIndex]!.slice(0, 3) };
+}
+
 /** The other calendar's text, for the long-press / secondary line; null if not representable. */
 export function formatAlternateDate(iso: string, calendar: CalendarPreference): string | null {
   if (calendar === 'nepali') return isIsoDate(iso) ? iso : null;

@@ -41,7 +41,7 @@ describe('Login screen', () => {
 
   it('shows school-neutral branding, both fields and the activate link', async () => {
     await render(<LoginScreen />);
-    expect(screen.getByText('ZN School')).toBeTruthy();
+    expect(screen.getByText('Orbis')).toBeTruthy();
     expect(screen.getByLabelText('Phone or email')).toBeTruthy();
     expect(screen.getByLabelText('Password')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeTruthy();

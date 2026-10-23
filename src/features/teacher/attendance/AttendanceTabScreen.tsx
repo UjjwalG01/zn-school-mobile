@@ -33,7 +33,7 @@ export default function AttendanceTabScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {showStudents && showSelf ? (
-        <View style={{ padding: spacing.lg, paddingBottom: 0 }}>
+        <View style={{ paddingVertical: spacing.lg, paddingBottom: 0 }}>
           <SegmentedControl
             accessibilityLabel={t('attendance.subtabs')}
             value={active}

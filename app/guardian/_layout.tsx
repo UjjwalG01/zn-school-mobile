@@ -1,6 +1,7 @@
 import { Redirect, Tabs } from 'expo-router';
 
 import { useGuard } from '../../src/auth/guards';
+import { brandHeaderOptions } from '../../src/components/BrandHeader';
 import { ShellSwitcher } from '../../src/components/ShellSwitcher';
 import { t } from '../../src/i18n';
 
@@ -11,7 +12,7 @@ export default function GuardianLayout() {
   if (guard.kind === 'wait') return null;
   if (guard.kind === 'redirect') return <Redirect href={guard.href} />;
   return (
-    <Tabs screenOptions={{ headerRight: () => <ShellSwitcher /> }}>
+    <Tabs screenOptions={{ ...brandHeaderOptions, headerRight: () => <ShellSwitcher inverse /> }}>
       <Tabs.Screen name="index" options={{ title: t('shell.home') }} />
     </Tabs>
   );

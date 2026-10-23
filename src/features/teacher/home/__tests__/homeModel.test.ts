@@ -1,11 +1,18 @@
-import type { MarksSubmission, TeacherExam, TeacherExamSubject } from '../../../../api/types/portal';
+import type {
+  MarksSubmission,
+  TeacherExam,
+  TeacherExamSubject,
+  TeacherSubjectAssignment,
+} from '../../../../api/types/portal';
 import { placementLabel } from '../../placement';
 import {
   buildExamCards,
   capList,
   progressTone,
+  progressTotals,
   returnedCount,
   subjectProgress,
+  subjectsPerClass,
 } from '../homeModel';
 
 const submission = (status: MarksSubmission['status']): MarksSubmission => ({
@@ -145,6 +152,56 @@ describe('returnedCount', () => {
     ]);
     expect(returnedCount(cards)).toBe(3);
     expect(returnedCount([])).toBe(0);
+  });
+});
+
+describe('progressTotals', () => {
+  it('counts subjects per state across every card', () => {
+    const cards = buildExamCards([
+      exam({ examId: 'e1', subjects: [subject('a', 'M', 'submitted'), subject('b', 'S', null), subject('c', 'E', 'draft')] }),
+      exam({ examId: 'e2', subjects: [subject('d', 'M', 'submitted'), subject('e', 'S', 'returned')] }),
+    ]);
+    expect(progressTotals(cards)).toEqual({
+      total: 5,
+      counts: { notStarted: 1, draft: 1, submitted: 2, returned: 1 },
+    });
+  });
+
+  it('is empty for no cards or cards without subjects', () => {
+    const zero = { total: 0, counts: { notStarted: 0, draft: 0, submitted: 0, returned: 0 } };
+    expect(progressTotals([])).toEqual(zero);
+    expect(progressTotals(buildExamCards([exam()]))).toEqual(zero);
+  });
+});
+
+describe('subjectsPerClass', () => {
+  const assignment = (offering: string, classId: string, className: string, sectionId: string | null): TeacherSubjectAssignment => ({
+    subjectOfferingId: offering,
+    subjectName: `Subject ${offering}`,
+    classId,
+    className,
+    sectionId,
+    sectionName: sectionId ? sectionId.toUpperCase() : null,
+  });
+
+  it('counts per class and section, most first, ties by label', () => {
+    const rows = subjectsPerClass([
+      assignment('1', 'c8', 'Class 8', 'a'),
+      assignment('2', 'c8', 'Class 8', 'b'),
+      assignment('3', 'c8', 'Class 8', 'a'),
+      assignment('4', 'c6', 'Class 6', null),
+      assignment('5', 'c9', 'Class 9', 'a'),
+    ]);
+    expect(rows).toEqual([
+      { key: 'c8:a', label: 'Class 8 · A', value: 2 },
+      { key: 'c6:none', label: 'Class 6', value: 1 },
+      { key: 'c8:b', label: 'Class 8 · B', value: 1 },
+      { key: 'c9:a', label: 'Class 9 · A', value: 1 },
+    ]);
+  });
+
+  it('is empty without assignments', () => {
+    expect(subjectsPerClass([])).toEqual([]);
   });
 });
 

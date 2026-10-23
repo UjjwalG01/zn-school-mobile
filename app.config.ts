@@ -16,7 +16,7 @@ if (appEnv !== 'development' && !apiUrl.startsWith('https://')) {
 }
 
 const config: ExpoConfig = {
-  name: 'ZN School',
+  name: 'Orbis',
   slug: 'zn-school-mobile',
   version: '1.0.0',
   scheme: 'znschool',

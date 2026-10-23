@@ -24,12 +24,12 @@ export function ListScreen<ItemT, SectionT = { data: readonly ItemT[] }>({
       <SectionList
         stickySectionHeadersEnabled={false}
         {...props}
-        contentContainerStyle={[{ padding: spacing.lg, gap: spacing.sm }, props.contentContainerStyle]}
+        contentContainerStyle={[{ paddingVertical: spacing.lg, gap: spacing.sm }, props.contentContainerStyle]}
       />
       {footer ? (
         <View
           style={{
-            padding: spacing.lg,
+            paddingVertical: spacing.lg,
             gap: spacing.xs,
             backgroundColor: colors.bg,
             borderTopWidth: StyleSheet.hairlineWidth,
