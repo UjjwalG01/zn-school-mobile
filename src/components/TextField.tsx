@@ -26,7 +26,7 @@ export function TextField({ label, error, endAdornment, ref, ...input }: TextFie
         style={[
           styles.box,
           {
-            minHeight: MIN_TOUCH_TARGET + spacing.sm,
+            minHeight: MIN_TOUCH_TARGET,
             backgroundColor: colors.card,
             borderColor: error ? colors.destructive : colors.border,
             borderRadius: radius.xl,

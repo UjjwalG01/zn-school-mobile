@@ -22,6 +22,8 @@ export function Banner({ tone, children }: BannerProps) {
           backgroundColor: warning ? colors.warning : colors.card,
           borderColor: warning ? colors.warning : colors.border,
           borderRadius: radius.lg,
+          // `padding` is not in this React Native version's style types: the two axes are written out.
+          paddingHorizontal: spacing.md,
           paddingVertical: spacing.md,
         },
       ]}

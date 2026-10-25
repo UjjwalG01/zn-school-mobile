@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { MIN_TOUCH_TARGET, withAlpha } from '../theme/tokens';
+import { iconSize, MIN_TOUCH_TARGET, withAlpha } from '../theme/tokens';
 import { useTheme } from '../theme/useTheme';
 
 /** A tinted card is the tint colour at this opacity over the screen, with no border. */
@@ -14,13 +14,15 @@ export interface CardProps {
   tint?: string;
   /** Makes the whole card a button (≥ 44pt) with a trailing chevron. Leave undefined for a static summary card. */
   onPress?: () => void;
+  /** The trailing chevron says "this opens something". Turn it off for a card whose tap only changes it in place (marks a row read). */
+  chevron?: boolean;
   /** Screen-reader label; required in practice when `onPress` is set. */
   accessibilityLabel?: string;
   /** A coloured border for a card that needs attention (a conflict, a refusal). The card must also say why in text. */
   emphasis?: 'warning' | 'danger';
 }
 
-export function Card({ children, tint, onPress, accessibilityLabel, emphasis }: CardProps) {
+export function Card({ children, tint, onPress, chevron = true, accessibilityLabel, emphasis }: CardProps) {
   const { colors, spacing, radius } = useTheme();
   const surface = {
     backgroundColor: tint ? withAlpha(tint, TINT_OPACITY) : colors.card,
@@ -56,13 +58,15 @@ export function Card({ children, tint, onPress, accessibilityLabel, emphasis }: 
       ]}
     >
       <View style={{ flex: 1, gap: spacing.xs }}>{children}</View>
-      <Ionicons
-        name="chevron-forward"
-        size={20}
-        color={colors.textMuted}
-        accessibilityElementsHidden
-        importantForAccessibility="no"
-      />
+      {chevron ? (
+        <Ionicons
+          name="chevron-forward"
+          size={iconSize.md}
+          color={colors.textMuted}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+        />
+      ) : null}
     </Pressable>
   );
 }

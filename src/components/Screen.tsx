@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { gutter } from '../theme/tokens';
 import { useTheme } from '../theme/useTheme';
 
 export interface ScreenProps {
@@ -20,7 +21,8 @@ export interface ScreenProps {
 /**
  * Safe area + keyboard avoidance + scroll, so content stays reachable at large font sizes.
  * Pull-to-refresh is opt-in; header and the offline banner (UI_SYSTEM §2) are added when a screen
- * needs them.
+ * needs them. This is the one place page content gets its inset (`gutter` at the sides, `spacing.lg` above and
+ * below): a page adds no margin of its own at the edges (UI_SYSTEM §8).
  */
 export function Screen({ children, refreshing = false, onRefresh }: ScreenProps) {
   const { colors, spacing } = useTheme();
@@ -31,7 +33,7 @@ export function Screen({ children, refreshing = false, onRefresh }: ScreenProps)
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={[styles.content, { paddingVertical: spacing.lg, gap: spacing.lg }]}
+          contentContainerStyle={[styles.content, { paddingHorizontal: gutter, paddingVertical: spacing.lg, gap: spacing.lg }]}
           keyboardShouldPersistTaps="handled"
           refreshControl={
             onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> : undefined

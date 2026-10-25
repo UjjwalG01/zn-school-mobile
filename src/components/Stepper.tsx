@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { MIN_TOUCH_TARGET } from '../theme/tokens';
+import { iconSize, MIN_TOUCH_TARGET } from '../theme/tokens';
 import { useTheme } from '../theme/useTheme';
 import { Text } from './Text';
 
@@ -51,7 +51,7 @@ export function Stepper({
         },
       ]}
     >
-      <Ionicons name={icon} size={24} color={colors.text} />
+      <Ionicons name={icon} size={iconSize.md} color={colors.text} />
     </Pressable>
   );
 

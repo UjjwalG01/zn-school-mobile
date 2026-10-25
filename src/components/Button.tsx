@@ -30,7 +30,7 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled,
       style={({ pressed }) => [
         styles.base,
         {
-          minHeight: primary ? MIN_TOUCH_TARGET + spacing.sm : MIN_TOUCH_TARGET,
+          minHeight: MIN_TOUCH_TARGET,
           paddingHorizontal: spacing.lg,
           gap: spacing.sm,
           borderRadius: radius.pill,

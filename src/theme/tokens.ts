@@ -69,13 +69,23 @@ export function withAlpha(hex: string, opacity: number): string {
   return `${hex}${alpha.toString(16).padStart(2, '0')}`;
 }
 
+/**
+ * Phone-sized type scale (2026-10-23 brief: smaller text on screens, buttons and tabs). Text still scales with the system
+ * font size, so a larger setting makes it bigger than these points; nothing sets `allowFontScaling={false}`.
+ */
 export const typography = {
-  caption: { fontSize: 12, lineHeight: 16 },
-  body: { fontSize: 14, lineHeight: 20 },
-  bodyLarge: { fontSize: 16, lineHeight: 22 },
-  title: { fontSize: 20, lineHeight: 26, fontWeight: '600' },
-  headline: { fontSize: 24, lineHeight: 30, fontWeight: '700' },
+  caption: { fontSize: 11, lineHeight: 15 },
+  body: { fontSize: 13, lineHeight: 18 },
+  bodyLarge: { fontSize: 14, lineHeight: 20 },
+  title: { fontSize: 17, lineHeight: 23, fontWeight: '600' },
+  headline: { fontSize: 21, lineHeight: 27, fontWeight: '700' },
 } as const;
+
+/** Icon glyph sizes. The tap area stays `MIN_TOUCH_TARGET`; only the glyph is small. */
+export const iconSize = { sm: 16, md: 18, lg: 22 } as const;
+
+/** The one horizontal inset of page content (`Screen`, `ListScreen`, their footers); the header bar uses the same. */
+export const gutter = spacing.lg;
 
 /** Minimum touch target in points (accessibility rule). */
 export const MIN_TOUCH_TARGET = 44;

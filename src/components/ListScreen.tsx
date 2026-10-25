@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { SectionList, type SectionListProps, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { gutter } from '../theme/tokens';
 import { useTheme } from '../theme/useTheme';
 
 export type ListScreenProps<ItemT, SectionT> = SectionListProps<ItemT, SectionT> & {
@@ -24,11 +25,15 @@ export function ListScreen<ItemT, SectionT = { data: readonly ItemT[] }>({
       <SectionList
         stickySectionHeadersEnabled={false}
         {...props}
-        contentContainerStyle={[{ paddingVertical: spacing.lg, gap: spacing.sm }, props.contentContainerStyle]}
+        contentContainerStyle={[
+          { paddingHorizontal: gutter, paddingVertical: spacing.lg, gap: spacing.sm },
+          props.contentContainerStyle,
+        ]}
       />
       {footer ? (
         <View
           style={{
+            paddingHorizontal: gutter,
             paddingVertical: spacing.lg,
             gap: spacing.xs,
             backgroundColor: colors.bg,

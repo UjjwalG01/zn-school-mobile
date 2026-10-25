@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { t } from '../i18n';
-import { MIN_TOUCH_TARGET } from '../theme/tokens';
+import { gutter, iconSize, MIN_TOUCH_TARGET } from '../theme/tokens';
 import { useTheme } from '../theme/useTheme';
 import { CurvedHeader } from './CurvedHeader';
 import { Text } from './Text';
@@ -22,7 +22,7 @@ export function BrandHeader({ title, onBack, right }: BrandHeaderProps) {
   const { colors, spacing } = useTheme();
   return (
     <CurvedHeader>
-      <View style={[styles.bar, { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, gap: spacing.sm }]}>
+      <View style={[styles.bar, { paddingHorizontal: gutter, paddingVertical: spacing.sm, gap: spacing.sm }]}>
         {onBack ? (
           <Pressable
             onPress={onBack}
@@ -30,7 +30,7 @@ export function BrandHeader({ title, onBack, right }: BrandHeaderProps) {
             accessibilityLabel={t('common.back')}
             style={[styles.back, { marginStart: -spacing.sm }]}
           >
-            <Ionicons name="arrow-back" size={24} color={colors.textInverse} />
+            <Ionicons name="arrow-back" size={iconSize.lg} color={colors.textInverse} />
           </Pressable>
         ) : null}
         <Text variant="title" tone="inverse" accessibilityRole="header" numberOfLines={1} style={styles.title}>
@@ -51,12 +51,22 @@ interface NavHeaderProps {
   navigation: { goBack: () => void };
 }
 
-function NavHeader({ options, route, back, navigation }: NavHeaderProps) {
+function NavHeader({ options, route, back, navigation, trailing }: NavHeaderProps & { trailing?: ReactNode }) {
+  const action = options.headerRight?.({ canGoBack: Boolean(back) });
   return (
     <BrandHeader
       title={options.title ?? route.name}
       onBack={back ? () => navigation.goBack() : undefined}
-      right={options.headerRight?.({ canGoBack: Boolean(back) })}
+      right={
+        trailing ? (
+          <>
+            {action}
+            {trailing}
+          </>
+        ) : (
+          action
+        )
+      }
     />
   );
 }
@@ -66,6 +76,15 @@ function NavHeader({ options, route, back, navigation }: NavHeaderProps) {
  * there is a screen under it, a back arrow. A new page gets the layout by living under a layout that spreads this.
  */
 export const brandHeaderOptions = { header: (props: NavHeaderProps) => <NavHeader {...props} /> };
+
+/**
+ * The same header with `trailing` as the last thing on the bar, after the screen's own action: the notification bell of a
+ * signed-in shell. Every navigator of the shell (tabs and the nested stacks) spreads this, so the bell sits in the same
+ * place wherever the header is shown and no screen draws its own.
+ */
+export const shellHeaderOptions = (trailing: ReactNode) => ({
+  header: (props: NavHeaderProps) => <NavHeader {...props} trailing={trailing} />,
+});
 
 const styles = StyleSheet.create({
   bar: { flexDirection: 'row', alignItems: 'center', minHeight: MIN_TOUCH_TARGET + 12 },
