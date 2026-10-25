@@ -10,7 +10,7 @@ describe('AuthScreen', () => {
         <Text>the form</Text>
       </AuthScreen>,
     );
-    expect(screen.getByText('Orbis')).toBeTruthy();
+    expect(screen.getByText('Orbis Education')).toBeTruthy();
     expect(screen.getByRole('header', { name: 'Sign in' })).toBeTruthy();
     expect(screen.getByText('the form')).toBeTruthy();
   });

@@ -24,7 +24,7 @@ describe('i18n', () => {
   });
 
   it('translates by locale', () => {
-    expect(t('auth.submit')).toBe('Sign in');
+    expect(t('auth.submit')).toBe(en['auth.submit']);
     setLocale('ne');
     expect(t('auth.submit')).toBe(ne['auth.submit']);
   });

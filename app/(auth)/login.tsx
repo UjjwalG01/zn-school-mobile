@@ -74,6 +74,7 @@ export default function LoginScreen() {
           <View
             accessibilityRole="alert"
             style={{
+              paddingHorizontal: spacing.md,
               paddingVertical: spacing.md,
               borderWidth: 1,
               borderRadius: radius.lg,
@@ -89,6 +90,7 @@ export default function LoginScreen() {
             accessibilityRole="alert"
             accessibilityLiveRegion="assertive"
             style={{
+              paddingHorizontal: spacing.md,
               paddingVertical: spacing.md,
               borderWidth: 1,
               borderRadius: radius.lg,

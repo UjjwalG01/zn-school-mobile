@@ -41,10 +41,10 @@ describe('Login screen', () => {
 
   it('shows school-neutral branding, both fields and the activate link', async () => {
     await render(<LoginScreen />);
-    expect(screen.getByText('Orbis')).toBeTruthy();
+    expect(screen.getByText('Orbis Education')).toBeTruthy();
     expect(screen.getByLabelText('Phone or email')).toBeTruthy();
     expect(screen.getByLabelText('Password')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Sign in' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Sign in with your school' })).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: 'Activate account' }));
     expect(mockPush).toHaveBeenCalledWith('/activate');
   });
@@ -59,14 +59,14 @@ describe('Login screen', () => {
   it('never calls the backend with a phone number', async () => {
     await render(<LoginScreen />);
     await fill('9841234567', 'secret123');
-    await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign in with your school' }));
     expect(screen.getByText(/Phone sign-in coming soon/)).toBeTruthy();
     expect(mockLogin).not.toHaveBeenCalled();
   });
 
   it('requires both fields', async () => {
     await render(<LoginScreen />);
-    await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign in with your school' }));
     expect(screen.getByText('Enter your phone or email.')).toBeTruthy();
     expect(screen.getByText('Enter your password.')).toBeTruthy();
     expect(mockLogin).not.toHaveBeenCalled();
@@ -76,7 +76,7 @@ describe('Login screen', () => {
     mockLogin.mockResolvedValueOnce({ accessToken: 'a', refreshToken: 'r' });
     await render(<LoginScreen />);
     await fill(' teacher@school.np ', 'secret123');
-    await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign in with your school' }));
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/resolve'));
     expect(getSession().status).toBe('signed-in');
     expect(mockLogin).toHaveBeenCalledWith('teacher@school.np', 'secret123');
@@ -87,7 +87,7 @@ describe('Login screen', () => {
     mockLogin.mockRejectedValueOnce(new ApiError(401, 'Unauthorized'));
     await render(<LoginScreen />);
     await fill('teacher@school.np', 'wrong');
-    await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign in with your school' }));
     expect(await screen.findByText('Incorrect email or password. Please try again.')).toBeTruthy();
     expect(mockReplace).not.toHaveBeenCalled();
   });
@@ -96,7 +96,7 @@ describe('Login screen', () => {
     mockLogin.mockRejectedValueOnce(new ApiError(429, 'x', 'AUTH_TOO_MANY_ATTEMPTS'));
     await render(<LoginScreen />);
     await fill('teacher@school.np', 'pw');
-    await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign in with your school' }));
     expect(await screen.findByText(/Too many attempts/)).toBeTruthy();
   });
 
@@ -105,7 +105,7 @@ describe('Login screen', () => {
     mockSave.mockRejectedValueOnce(new Error('keystore'));
     await render(<LoginScreen />);
     await fill('teacher@school.np', 'pw');
-    await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign in with your school' }));
     expect(await screen.findByText(/Could not save your session/)).toBeTruthy();
     expect(mockReplace).not.toHaveBeenCalled();
     expect(getSession().status).toBe('signed-out');
@@ -116,8 +116,8 @@ describe('Login screen', () => {
     mockLogin.mockReturnValueOnce(new Promise((r) => (resolve = r)));
     await render(<LoginScreen />);
     await fill('teacher@school.np', 'pw');
-    await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
-    await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign in with your school' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Sign in with your school' }));
     expect(mockLogin).toHaveBeenCalledTimes(1);
     resolve({ accessToken: 'a', refreshToken: 'r' });
     await waitFor(() => expect(mockReplace).toHaveBeenCalled());

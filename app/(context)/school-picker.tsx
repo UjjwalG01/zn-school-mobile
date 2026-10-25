@@ -51,6 +51,7 @@ export default function SchoolPickerScreen() {
                   style={{
                     minHeight: MIN_TOUCH_TARGET + spacing.md,
                     justifyContent: 'center',
+                    paddingHorizontal: spacing.md,
                     paddingVertical: spacing.md,
                     borderWidth: selected ? 2 : 1,
                     borderColor: selected ? colors.accent : colors.border,
