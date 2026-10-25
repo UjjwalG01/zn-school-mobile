@@ -18,13 +18,17 @@ export const myAttendanceKey = (tenantId: string | null, month: string | null) =
     ? [...scope(tenantId), month ?? 'current']
     : userKey('teacher-self-attendance', 'no-school');
 
-export function useMyAttendance(month: string | null) {
+/**
+ * `enabled = false` keeps the request off (the Dashboard chart for a teacher without `attendance.self`). The Dashboard
+ * chart and the My Attendance screen read the same `null` month, so together they cost one request per `staleTime`.
+ */
+export function useMyAttendance(month: string | null, enabled = true) {
   const { tenantId } = useSession();
   return useQuery({
     queryKey: myAttendanceKey(tenantId, month),
     queryFn: () => getMyAttendance(month ?? undefined),
     staleTime: STALE_TIME.daily,
-    enabled: tenantId !== null,
+    enabled: enabled && tenantId !== null,
   });
 }
 

@@ -1,4 +1,4 @@
-// Profile tab: who is signed in, which school is open, the app's language, and the two account actions
+// Profile tab: who is signed in, which school is open, the app's language and light/dark choice, and the two account actions
 // (Switch school, Sign out). Always visible, so a school that switches every module off can never lock the user in.
 // Both actions are the existing session machinery: `chooseSchool` drops the old school's cache,
 // `logout` wipes tokens, context, the persisted cache and downloaded files. The tab header already
@@ -11,6 +11,7 @@ import { LanguageSwitch } from '../../../components/LanguageSwitch';
 import { Screen } from '../../../components/Screen';
 import { ShellSwitcher } from '../../../components/ShellSwitcher';
 import { Text } from '../../../components/Text';
+import { ThemeSwitch } from '../../../components/ThemeSwitch';
 import { useMe, useMySchools } from '../../../auth/queries';
 import { useSession } from '../../../auth/session';
 import { t } from '../../../i18n';
@@ -57,6 +58,9 @@ export default function ProfileScreen() {
       ) : null}
       <Card>
         <LanguageSwitch />
+      </Card>
+      <Card>
+        <ThemeSwitch />
       </Card>
       <ShellSwitcher />
       <AccountActions />

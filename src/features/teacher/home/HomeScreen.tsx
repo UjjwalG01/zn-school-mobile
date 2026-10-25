@@ -1,5 +1,6 @@
-// Teacher landing page (docs/project/TEACHER_HOME_PLAN.md). Composed from `my-classes` and `exams`
-// (there is no `/portal/teacher/home`); read-only, so it shows backend state and nothing else.
+// Teacher landing page (docs/project/TEACHER_HOME_PLAN.md). Composed from `my-classes`, `exams`, the person's own month of
+// attendance and the Academic Calendar (there is no `/portal/teacher/home`); read-only, so it shows backend state and nothing
+// else. Order: summary tiles, the calendar with its events and notices, then summaries only: each opens its own page.
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { View } from 'react-native';
@@ -7,6 +8,7 @@ import { View } from 'react-native';
 import { Banner } from '../../../components/Banner';
 import { Card } from '../../../components/Card';
 import { OfflineBanner, savedDataTimestamp } from '../../../components/OfflineBanner';
+import { QueryState } from '../../../components/QueryState';
 import { Screen } from '../../../components/Screen';
 import { Text } from '../../../components/Text';
 import { useMe, useMySchools } from '../../../auth/queries';
@@ -26,14 +28,19 @@ import { menuHref } from '../../routes';
 import { useManualRefresh } from '../../useManualRefresh';
 import { useVisibilityContext, useVisibleFeatures } from '../../useVisibleFeatures';
 import { isFeatureVisible } from '../../visibility';
-import { TEACHER_ATTENDANCE_ACCESS, TEACHER_MARKS_ACCESS } from '../access';
-import { ATTENDANCE_TAB_HREF, rosterHref } from '../attendance/routes';
+import {
+  TEACHER_ATTENDANCE_ACCESS,
+  TEACHER_CALENDAR_ACCESS,
+  TEACHER_MARKS_ACCESS,
+  TEACHER_SELF_ATTENDANCE_ACCESS,
+} from '../access';
+import { ATTENDANCE_TAB_HREF, SELF_ATTENDANCE_TAB_HREF } from '../attendance/routes';
+import { DashboardCalendar } from '../calendar/CalendarSections';
+import { useCalendarBoard } from '../calendar/useCalendarBoard';
 import { useTeacherExams, useTeacherMyClasses } from '../queries';
+import { useMyAttendance } from '../selfAttendance/queries';
 import { buildExamCards, returnedCount } from './homeModel';
-import { AttendanceSection } from './sections/AttendanceSection';
-import { MarksProgressChart, SubjectsByClassChart } from './sections/ChartsSection';
-import { MarksSection } from './sections/MarksSection';
-import { SubjectsSection } from './sections/SubjectsSection';
+import { MarksProgressChart, MyAttendanceChart, SubjectsByClassChart } from './sections/ChartsSection';
 
 function HomeHeader({
   name,
@@ -51,11 +58,11 @@ function HomeHeader({
   return (
     <View style={{ gap: spacing.xs }}>
       <Text variant="headline" accessibilityRole="header">
-        {name ? t('home.greeting', { name }) : t('shell.home')}
+        {/* {name ? t('home.greeting', { name }) : t('shell.home')} */}
+        {school ? <Text style={{ fontWeight: 'bold' }} variant="headline">{school.toUpperCase()}</Text> : "Orbis Education"}
       </Text>
-      {school ? <Text variant="bodyLarge">{school}</Text> : null}
       {calendar ? (
-        <Text>
+        <Text style={{ fontWeight: '600' }} >
           {formatDate(today, calendar)}
           {alternate ? <Text tone="muted">{` · ${alternate}`}</Text> : null}
         </Text>
@@ -64,11 +71,21 @@ function HomeHeader({
   );
 }
 
-/** A count over a label on a tinted card (the summary row). Two fit a phone row; a third wraps under them. */
-function StatTile({ value, label, tint }: { value: number; label: string; tint: string }) {
+/** A count over a label on a tinted card (the summary row); it opens its page when it has one. Two fit a phone row; a third wraps under them. */
+function StatTile({
+  value,
+  label,
+  tint,
+  onOpen,
+}: {
+  value: number;
+  label: string;
+  tint: string;
+  onOpen?: () => void;
+}) {
   return (
     <View style={{ flex: 1, minWidth: 140 }}>
-      <Card tint={tint} accessibilityLabel={`${label}: ${value}`}>
+      <Card tint={tint} onPress={onOpen} accessibilityLabel={`${label}: ${value}`}>
         <Text variant="headline">{String(value)}</Text>
         <Text variant="caption" tone="muted">
           {label}
@@ -90,28 +107,46 @@ export default function HomeScreen() {
   const ctx = useVisibilityContext('teacher');
   const showAttendance = ctx !== null && isFeatureVisible(TEACHER_ATTENDANCE_ACCESS, ctx);
   const showMarks = ctx !== null && isFeatureVisible(TEACHER_MARKS_ACCESS, ctx);
+  const showSelfAttendance = ctx !== null && isFeatureVisible(TEACHER_SELF_ATTENDANCE_ACCESS, ctx);
+  const showCalendar = ctx !== null && isFeatureVisible(TEACHER_CALENDAR_ACCESS, ctx);
 
   const classes = useTeacherMyClasses(todayIso());
   const exams = useTeacherExams(showMarks);
+  // The one extra read of the "My Attendance This Month" chart; the My Attendance screen shares its cache entry.
+  const selfAttendance = useMyAttendance(null, showSelfAttendance);
+  // The Calendar screen's month, upcoming window and notices (same cache entries, so opening it costs nothing when warm).
+  const board = useCalendarBoard(showCalendar);
   const cards = useMemo(
     () => (showMarks ? buildExamCards(exams.data ?? []) : []),
     [showMarks, exams.data],
   );
   const returned = returnedCount(cards);
 
-  // Offline with cached data: say so and how old it is.
-  const savedFrom = savedDataTimestamp(showMarks ? [classes, exams] : [classes]);
+  // Offline with cached data: say so and how old it is. A read that never ran has no data and no error, so it adds nothing.
+  const savedFrom = savedDataTimestamp([classes, exams, board.month, board.upcoming, board.notices]);
   const updatedAt = Math.max(classes.dataUpdatedAt, showMarks ? exams.dataUpdatedAt : 0);
 
   useRefreshSchoolsOnFeatureDenied(classes.error, exams.error);
   const { refreshing, onRefresh } = useManualRefresh(() =>
-    Promise.all([classes.refetch(), showMarks ? exams.refetch() : null]),
+    Promise.all([
+      classes.refetch(),
+      showMarks ? exams.refetch() : null,
+      showSelfAttendance ? selfAttendance.refetch() : null,
+      showCalendar ? board.refetchAll() : null,
+    ]),
   );
 
-  // "+N more" opens the full list, once My classes (inside the Academic tab) is visible to this user.
+  // Each summary opens the page that holds its detail, once that page is visible to this user.
   const features = useVisibleFeatures('teacher');
-  const myClasses = features.find((feature) => feature.id === 'teacher.assignments');
-  const openAssignments = myClasses ? () => router.push(menuHref(myClasses)) : undefined;
+  const opener = (id: string) => {
+    const feature = features.find((candidate) => candidate.id === id);
+    return feature ? () => router.push(menuHref(feature)) : undefined;
+  };
+  const openAssignments = opener('teacher.assignments');
+  const openMarks = opener('teacher.marks');
+  const openCalendar = opener('teacher.calendar');
+  const openAttendance = showAttendance ? () => router.push(ATTENDANCE_TAB_HREF) : undefined;
+  const openSelfAttendance = () => router.push(SELF_ATTENDANCE_TAB_HREF);
 
   return (
     <Screen refreshing={refreshing} onRefresh={onRefresh}>
@@ -120,24 +155,39 @@ export default function HomeScreen() {
       {returned > 0 ? <Banner tone="warning">{t('home.returned', { count: returned })}</Banner> : null}
       {classes.data ? (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-          <StatTile value={classes.data.classes.length} label={t('dashboard.classes')} tint={colors.accent} />
-          <StatTile value={classes.data.subjects.length} label={t('dashboard.subjects')} tint={colors.success} />
+          <StatTile
+            value={classes.data.classes.length}
+            label={t('dashboard.classes')}
+            tint={colors.accent}
+            onOpen={openAttendance ?? openAssignments}
+          />
+          <StatTile
+            value={classes.data.subjects.length}
+            label={t('dashboard.subjects')}
+            tint={colors.success}
+            onOpen={openAssignments}
+          />
           {showMarks && exams.data ? (
-            <StatTile value={cards.length} label={t('dashboard.openExams')} tint={colors.warning} />
+            <StatTile value={cards.length} label={t('dashboard.openExams')} tint={colors.warning} onOpen={openMarks} />
           ) : null}
         </View>
+      ) : (
+        // The state of the one read the tiles and the subjects chart share: loading, no access, offline, retry.
+        <QueryState query={classes}>{null}</QueryState>
+      )}
+      {showCalendar ? <DashboardCalendar board={board} onOpen={openCalendar} /> : null}
+      {showSelfAttendance ? <MyAttendanceChart query={selfAttendance} onOpen={openSelfAttendance} /> : null}
+      {showMarks ? (
+        exams.data ? (
+          <MarksProgressChart cards={cards} onOpen={openMarks} />
+        ) : (
+          // No staff link (403) hides it; other failures keep a retry.
+          <QueryState query={exams} hideOnForbidden>
+            {null}
+          </QueryState>
+        )
       ) : null}
-      {showMarks && exams.data ? <MarksProgressChart cards={cards} /> : null}
-      {classes.data ? <SubjectsByClassChart subjects={classes.data.subjects} /> : null}
-      {showAttendance ? (
-        <AttendanceSection
-          query={classes}
-          onOpen={(placement) => router.push(rosterHref(placement))}
-          onMore={() => router.push(ATTENDANCE_TAB_HREF)}
-        />
-      ) : null}
-      {showMarks ? <MarksSection query={exams} cards={cards} /> : null}
-      <SubjectsSection query={classes} hideOnForbidden={showAttendance} onMore={openAssignments} />
+      {classes.data ? <SubjectsByClassChart subjects={classes.data.subjects} onOpen={openAssignments} /> : null}
       {updatedAt > 0 && savedFrom === null && calendar ? (
         <Text variant="caption" tone="muted">
           {t('home.updated', { when: formatTimestamp(updatedAt, calendar) })}

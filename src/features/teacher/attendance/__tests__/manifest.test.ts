@@ -59,12 +59,13 @@ describe('teacher.attendance manifest', () => {
       'teacher.exam-attendance',
       'teacher.more',
       'teacher.calendar',
+      'teacher.notifications',
       'teacher.profile',
     ]);
     const orders = featureRegistry.map((f) => f.order);
     expect(orders).toEqual([...orders].sort((a, b) => a - b));
     // With attendance.mark only, everything but My Attendance (attendance.self), Marks entry (exam_result.save),
-    // Exam attendance (exam_attendance.mark) and the Calendar (calendar.read) is visible.
+    // Exam attendance (exam_attendance.mark) and the Calendar (calendar.read) is visible (Notifications needs no key).
     const needsAnotherKey = ['teacher.selfAttendance', 'teacher.marks', 'teacher.exam-attendance', 'teacher.calendar'];
     expect(visibleFeatures(featureRegistry, ctx()).map((f) => f.id)).toEqual(
       featureRegistry.map((f) => f.id).filter((id) => !needsAnotherKey.includes(id)),

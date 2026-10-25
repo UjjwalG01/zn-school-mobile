@@ -15,7 +15,7 @@ import { StatusBadge } from '../../../../components/StatusBadge';
 import { Text } from '../../../../components/Text';
 import { TextField } from '../../../../components/TextField';
 import { t } from '../../../../i18n';
-import { MIN_TOUCH_TARGET } from '../../../../theme/tokens';
+import { iconSize, MIN_TOUCH_TARGET } from '../../../../theme/tokens';
 import { useTheme } from '../../../../theme/useTheme';
 import { type DraftEntry, effectiveEntry, labelFor, STATUS_TONE } from '../attendanceModel';
 import { StatusPicker } from './StatusPicker';
@@ -95,7 +95,7 @@ export const AttendanceRow = memo(function AttendanceRow({
               accessibilityLabel={t('studentInfo.open', { name: row.fullName })}
               style={{ minWidth: MIN_TOUCH_TARGET, minHeight: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center' }}
             >
-              <Ionicons name="information-circle-outline" size={24} color={colors.accent} />
+              <Ionicons name="information-circle-outline" size={iconSize.lg} color={colors.accent} />
             </Pressable>
           ) : null}
         </View>

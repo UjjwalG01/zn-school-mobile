@@ -9,7 +9,6 @@ import { useTheme } from '../../../../theme/useTheme';
 
 export interface SectionProps {
   title: string;
-  hint?: string;
   query: QueryStateSource;
   isEmpty: boolean;
   emptyText: string;
@@ -20,7 +19,6 @@ export interface SectionProps {
 /** A titled Home block around one query. A hidden state hides the title too. */
 export function Section({
   title,
-  hint,
   query,
   isEmpty,
   emptyText,
@@ -31,12 +29,9 @@ export function Section({
   if (queryView(query, { isEmpty, hideOnForbidden }) === 'hidden') return null;
   return (
     <View style={{ gap: spacing.sm }}>
-      <View>
-        <Text variant="title" accessibilityRole="header">
-          {title}
-        </Text>
-        {hint ? <Text tone="muted">{hint}</Text> : null}
-      </View>
+      <Text variant="title" accessibilityRole="header">
+        {title}
+      </Text>
       <QueryState query={query} isEmpty={isEmpty} emptyText={emptyText} hideOnForbidden={hideOnForbidden}>
         {children}
       </QueryState>

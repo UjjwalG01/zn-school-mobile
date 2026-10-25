@@ -6,6 +6,7 @@ import { View } from 'react-native';
 
 import { SegmentedControl } from '../../../components/SegmentedControl';
 import { t } from '../../../i18n';
+import { gutter } from '../../../theme/tokens';
 import { useTheme } from '../../../theme/useTheme';
 import { useVisibilityContext } from '../../useVisibleFeatures';
 import { isFeatureVisible } from '../../visibility';
@@ -33,7 +34,7 @@ export default function AttendanceTabScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {showStudents && showSelf ? (
-        <View style={{ paddingVertical: spacing.lg, paddingBottom: 0 }}>
+        <View style={{ paddingHorizontal: gutter, paddingTop: spacing.lg }}>
           <SegmentedControl
             accessibilityLabel={t('attendance.subtabs')}
             value={active}

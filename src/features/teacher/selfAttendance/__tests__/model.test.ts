@@ -1,6 +1,6 @@
 import { ApiError, NETWORK_ERROR_CODE } from '../../../../api/errors';
 import type { StaffAttendanceRecord } from '../../../../api/types/attendance';
-import { isNotLinked, markErrorKey, recordFor, statusSummary, upsertRecord } from '../model';
+import { isNotLinked, markErrorKey, monthTotals, recordFor, statusSummary, upsertRecord } from '../model';
 
 const record = (attendanceDate: string, status: StaffAttendanceRecord['status'] = 'present'): StaffAttendanceRecord => ({
   id: `r-${attendanceDate}`,
@@ -27,6 +27,36 @@ describe('statusSummary', () => {
 
   it('is empty for a month with no records', () => {
     expect(statusSummary([], (status) => status)).toBe('');
+  });
+});
+
+describe('monthTotals', () => {
+  it('counts each status the model knows and every record', () => {
+    const records = [
+      record('2026-10-19'),
+      record('2026-10-20', 'absent'),
+      record('2026-10-21'),
+      record('2026-10-22', 'half_day'),
+      record('2026-10-23', 'late'),
+    ];
+    expect(monthTotals(records)).toEqual({
+      recorded: 5,
+      counts: { present: 2, absent: 1, late: 1, half_day: 1, excused: 0 },
+    });
+  });
+
+  it('is all zero for a month with no records', () => {
+    expect(monthTotals([])).toEqual({
+      recorded: 0,
+      counts: { present: 0, absent: 0, late: 0, half_day: 0, excused: 0 },
+    });
+  });
+
+  it('counts a status it does not know as recorded only, never as present', () => {
+    const unknown = { ...record('2026-10-19'), status: 'on_duty' } as unknown as StaffAttendanceRecord;
+    const totals = monthTotals([unknown, record('2026-10-20')]);
+    expect(totals.recorded).toBe(2);
+    expect(totals.counts.present).toBe(1);
   });
 });
 

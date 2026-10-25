@@ -30,6 +30,22 @@ export function statusSummary(
     .join(' · ');
 }
 
+/** The order of the statuses in the dashboard chart; also the statuses it knows. */
+export const CHART_STATUSES: readonly AttendanceStatus[] = ['present', 'absent', 'late', 'half_day', 'excused'];
+
+/**
+ * One count per status for the loaded month (a count of the backend's records, no rule of its own) and how many days
+ * have a record at all. A status the app does not know is counted in `recorded` only, so it is never silently a "present".
+ */
+export function monthTotals(records: readonly StaffAttendanceRecord[]): {
+  recorded: number;
+  counts: Record<AttendanceStatus, number>;
+} {
+  const counts: Record<AttendanceStatus, number> = { present: 0, absent: 0, late: 0, half_day: 0, excused: 0 };
+  for (const { status } of records) if (status in counts) counts[status] += 1;
+  return { recorded: records.length, counts };
+}
+
 /** 404 on `/attendance/staff/self`: the account is not linked to a staff member. */
 export const isNotLinked = (error: unknown): boolean =>
   error instanceof ApiError && error.status === 404;

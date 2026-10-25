@@ -17,3 +17,6 @@ export const rosterHref = (placement: Pick<TeacherPlacement, 'classId' | 'sectio
  * would leave a previous "My Attendance" open.
  */
 export const ATTENDANCE_TAB_HREF = { pathname: '/teacher/attendance', params: { subtab: 'students' } } as const;
+
+/** The Attendance tab on its My Attendance subtab (the teacher's own presence). */
+export const SELF_ATTENDANCE_TAB_HREF = { pathname: '/teacher/attendance', params: { subtab: 'self' } } as const;

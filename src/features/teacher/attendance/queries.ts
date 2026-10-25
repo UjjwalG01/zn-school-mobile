@@ -15,6 +15,20 @@ export const attendanceRosterKey = (tenantId: string | null, query: RosterQuery)
 export const attendanceSettingsKey = (tenantId: string | null) =>
   tenantId ? tenantKey(tenantId, 'attendance', 'settings') : userKey('attendance-settings', 'no-school');
 
+/**
+ * The status labels if some other screen has already loaded them, and never a request of its own: the Dashboard chart
+ * has a one-request budget (api-and-data §4), so it uses the school's wording when it is cached and the app's otherwise.
+ */
+export function useCachedAttendanceSettings() {
+  const { tenantId } = useSession();
+  return useQuery({
+    queryKey: attendanceSettingsKey(tenantId),
+    queryFn: getAttendanceSettings,
+    staleTime: STALE_TIME.reference,
+    enabled: false,
+  }).data;
+}
+
 /** `query = null` (a route without a class) keeps the request off. Served by the primary database. */
 export function useAttendanceRoster(query: RosterQuery | null) {
   const { tenantId } = useSession();

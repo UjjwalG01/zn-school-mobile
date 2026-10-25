@@ -45,6 +45,16 @@ export const TEACHER_CALENDAR_ACCESS: FeatureAccess = {
   mobileModuleKey: 'calendar',
 };
 
+// The notification inbox (More hub and the header bell). `GET /portal/notifications` is membership-only and returns only
+// the caller's own rows, and the Communication module has no licence key yet, so there is no permission, entitlement or
+// school switch to hint at: the bell is for everyone signed in to a school (a 403 would still be shown, not hidden).
+export const TEACHER_NOTIFICATIONS_ACCESS: FeatureAccess = {
+  audience: 'teacher',
+  requiredPermission: null,
+  requiredEntitlement: null,
+  mobileModuleKey: null,
+};
+
 // Exam attendance (Academic hub). `exam_attendance.mark` opens the roster and the save; a teacher is limited by the
 // server to the classes they are assigned to unless the role also holds `exam_attendance.mark_any`, which the app never
 // reads: the lists it is given are already the right ones. Shares the `exams` school switch with marks entry.

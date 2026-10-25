@@ -29,12 +29,12 @@ export function useCalendarWindow(from: string, to: string, enabled = true) {
 }
 
 /** The newest notices this person may read; the server applies the audience and class scope. */
-export function useNotices() {
+export function useNotices(enabled = true) {
   const { tenantId } = useSession();
   return useQuery({
     queryKey: noticesKey(tenantId),
     queryFn: () => getNotices(NOTICE_COUNT),
     staleTime: STALE_TIME.daily,
-    enabled: tenantId !== null,
+    enabled: enabled && tenantId !== null,
   });
 }
