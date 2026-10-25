@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-import { brandHeaderOptions } from '../../../src/components/BrandHeader';
+import { teacherHeaderOptions } from '../../../src/features/teacher/notifications/headerOptions';
 import { ShellSwitcher } from '../../../src/components/ShellSwitcher';
 import { t } from '../../../src/i18n';
 
@@ -9,7 +9,7 @@ import { t } from '../../../src/i18n';
 // why the shell switcher is repeated on the hub.
 export default function AcademicLayout() {
   return (
-    <Stack screenOptions={brandHeaderOptions}>
+    <Stack screenOptions={teacherHeaderOptions}>
       <Stack.Screen name="index" options={{ title: t('tabs.academic'), headerRight: () => <ShellSwitcher inverse /> }} />
       <Stack.Screen name="assignments" options={{ title: t('assignments.title') }} />
       <Stack.Screen name="marks" options={{ title: t('academic.marks') }} />

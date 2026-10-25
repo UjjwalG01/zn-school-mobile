@@ -58,12 +58,16 @@ describe('More hub', () => {
     expect(screen.queryByText('More features for teachers are coming soon.')).toBeNull();
   });
 
-  it('shows only the explanatory line when the teacher can use none of its cards', async () => {
+  it('always offers Notifications (the inbox needs no permission), and opens it', async () => {
     seed(['attendance.mark']);
     await render(<MoreScreen />, { wrapper });
+    const user = userEvent.setup();
 
-    expect(await screen.findByText('More features for teachers are coming soon.')).toBeTruthy();
+    await user.press(await screen.findByRole('button', { name: 'Notifications' }));
+    expect(mockPush).toHaveBeenCalledWith('/teacher/more/notifications');
+    // Without calendar.read the calendar card is not offered, and the hub is no longer empty.
     expect(screen.queryByRole('button', { name: 'Academic Calendar' })).toBeNull();
+    expect(screen.queryByText('More features for teachers are coming soon.')).toBeNull();
   });
 
   it('lists nothing from another hub', async () => {

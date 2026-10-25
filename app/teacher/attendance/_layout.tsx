@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-import { brandHeaderOptions } from '../../../src/components/BrandHeader';
+import { teacherHeaderOptions } from '../../../src/features/teacher/notifications/headerOptions';
 import { ShellSwitcher } from '../../../src/components/ShellSwitcher';
 import { t } from '../../../src/i18n';
 
@@ -9,7 +9,7 @@ import { t } from '../../../src/i18n';
 // the shell switcher is repeated on the list screen. The roster screen sets its title to the class.
 export default function AttendanceLayout() {
   return (
-    <Stack screenOptions={brandHeaderOptions}>
+    <Stack screenOptions={teacherHeaderOptions}>
       <Stack.Screen name="index" options={{ title: t('attendance.title'), headerRight: () => <ShellSwitcher inverse /> }} />
       <Stack.Screen name="roster" options={{ title: t('attendance.title') }} />
       <Stack.Screen name="student" options={{ title: t('studentInfo.title') }} />

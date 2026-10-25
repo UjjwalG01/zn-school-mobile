@@ -6,6 +6,7 @@ import { teacherExamAttendanceFeature } from './teacher/examAttendance/manifest'
 import { teacherHomeFeature } from './teacher/home/manifest';
 import { teacherMarksFeature } from './teacher/marks/manifest';
 import { teacherMoreFeature } from './teacher/more/manifest';
+import { teacherNotificationsFeature } from './teacher/notifications/manifest';
 import { teacherProfileFeature } from './teacher/profile/manifest';
 import { teacherSelfAttendanceFeature } from './teacher/selfAttendance/manifest';
 import type { FeatureManifest } from './types';
@@ -25,5 +26,6 @@ export const featureRegistry: readonly FeatureManifest[] = [
   teacherExamAttendanceFeature,
   teacherMoreFeature,
   teacherCalendarFeature,
+  teacherNotificationsFeature,
   teacherProfileFeature,
 ];

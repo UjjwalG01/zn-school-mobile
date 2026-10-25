@@ -31,12 +31,21 @@ export interface MarksSubmission {
   submittedAt: string | null;
 }
 
+/** `exam_components.component_type` in the backend schema (migration 0113). */
+export type ExamComponentType = 'theory' | 'practical' | 'cas' | 'internal' | 'project' | 'viva' | 'other';
+
 /** One mark the teacher enters for a subject. */
 export interface ExamComponent {
   id: string;
   name: string;
   /** Decimal string; the largest mark the backend accepts for this component. */
   maxMarks: string;
+  /**
+   * What kind of mark this is. NOT sent yet: `GET /portal/teacher/exams` returns `{ id, name, maxMarks }` only
+   * (backend `exam-result.service.ts`, request B18 in BACKEND_PREREQUISITES §18). While it is absent the marks table lists
+   * one column per component under its own name; it never reads the type from `name`, a missing mark or a zero.
+   */
+  componentType?: ExamComponentType;
 }
 
 export interface TeacherExamSubject {
