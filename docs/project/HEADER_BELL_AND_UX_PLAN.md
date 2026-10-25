@@ -9,7 +9,7 @@ access: Read
 ## Status
 
 **Built and unit-tested on 2026-10-23; run over HTTP against the mobile test API (27 checks); not run on a phone (decision D10).** The
-owner's 2026-10-25 request supersedes the earlier commit hold; this workstream is pending grouped commits after repository checks.
+owner's 2026-10-25 request superseded the earlier commit hold; the reviewed changes were committed in logical groups after repository checks.
 (the owner's earlier work was committed first as `711081a`, with the manual edits). The 2026-10-25 repository checks passed: `pnpm lint` (one
 warning in `CurvedHeader.tsx`), `pnpm typecheck`, and `pnpm test` (86 suites / 803 tests). Nothing was changed in the web/API repository;
 what it would need is `BACKEND_PREREQUISITES.md` §18 (B18 to B20, proposed).
@@ -27,7 +27,7 @@ what it would need is `BACKEND_PREREQUISITES.md` §18 (B18 to B20, proposed).
 | 4 Marks-entry table: one line per student, roll order, summary header, Theory / Practical columns, practical disabled when it does not apply | `MarksEntryScreen` with a summary card, a sticky column header, `MarksRow` (one line), `MarkCell`; `markColumns` decides the columns | `src/features/teacher/marks/` |
 | 5 Dropdown anchored to the field | `SelectField` opens under (or over) the field through `placeDropdown` | `src/components/SelectField.tsx`, `dropdownPlacement.ts` |
 | 6 Consistent top-level spacing | `gutter`, applied once by `Screen` and `ListScreen`; the subtab control uses it; no page adds its own edge margin | `UI_SYSTEM.md` §10 |
-| 7 Security, tests, documentation | 27 HTTP checks (§6), 795 unit tests, this plan, `API_CONTRACT.md` §2, `BACKEND_PREREQUISITES.md` §18, `UI_SYSTEM.md` §9 to §11, `project-status.md` | |
+| 7 Security, tests, documentation | 27 HTTP checks (§6), 803 unit tests as of 2026-10-25, this plan, `API_CONTRACT.md` §2, `BACKEND_PREREQUISITES.md` §18, `UI_SYSTEM.md` §9 to §11, `project-status.md` | |
 | Light and dark mode requirements and a toggle in the profile section | requirements T1 to T11 in `UI_SYSTEM.md` §9; `ThemeSwitch` (Auto / Light / Dark) in Profile; remembered on the device | `src/theme/themePreference.ts`, `src/components/ThemeSwitch.tsx` |
 | Smaller font sizes for screens, buttons, tabs and icons | type scale 11 / 13 / 14 / 17 / 21, `iconSize` 16 / 18 / 22, 44-high buttons and fields, tab labels in `caption`, tab icons 22; hit areas stay 44 | `tokens.ts`, `Button`, `TextField`, `app/teacher/_layout.tsx` |
 
@@ -35,8 +35,7 @@ what it would need is `BACKEND_PREREQUISITES.md` §18 (B18 to B20, proposed).
 
 # 2. Gate and conflicts
 
-**Commit status update (2026-10-25):** the earlier statement that this brief was not committed is a working-tree status note,
-not a scope gate. The owner has explicitly authorized grouped commits; no commit is claimed until checks and staging complete.
+**Commit status update (2026-10-25):** the owner explicitly authorized grouped commits, and the reviewed changes were committed after repository checks. This records commit status only; the owner-run phone verification remains pending.
 
 - **CLAUDE.md §5** lists notices / push (M4) as "do not pull ahead". The owner moved the teacher side of notices and the inbox into M2 on
   2026-10-22 (roadmap M2), and the brief of today asks for the bell. The owner's explicit instruction ranks first (§2 rank 1). **Push is not
@@ -119,7 +118,7 @@ not a scope gate. The owner has explicitly authorized grouped commits; no commit
 | Dropdown | Next to the field when supported | 5 `placeDropdown` tests + the 6 existing `SelectField` tests; **placement on the owner's Android version: not seen** |
 | Layout | One top-level inset, no duplicate margins | `layoutInsets.test.tsx` (4); the margin bug fixed in 7 files |
 | Security | Backend authorization, tenant isolation and assignment scope hold | HTTP checks below (27/27) |
-| Quality | Tests, typecheck, lint, build | `tsc` clean, `eslint` 0 errors (1 older warning in `CurvedHeader.tsx`), 86 suites / 795 tests, `expo export --platform android` OK (exported to a scratch folder) |
+| Quality | Tests, typecheck, lint, build | On 2026-10-25: `tsc` clean, `eslint` 0 errors (1 warning in `CurvedHeader.tsx`), 86 suites / 803 tests. `expo export --platform android` was OK on 2026-10-23 (exported to a scratch folder) |
 
 **HTTP checks, mobile test API (`zn-mobile-test-api`, database `zn_school_mobile_test`, 2026-10-23; the app not in the loop).** Three
 throwaway notification rows were inserted for the run (the table had none) and removed afterwards; nothing else was written. 27 of 27 passed:

@@ -12,7 +12,7 @@ access: Read
 It is the *delivery* view over `docs/project/roadmap.md` (M0 to M6: the protected, backend-gate view) and changes none
 of its gates or decisions. A phase is approved, started and completed only as recorded in `project-status.md`.
 
-**Working-tree and commit note (2026-10-25):** the 2026-10-23 implementation and documentation changes remain uncommitted pending the owner's grouped-commit request. Repository checks now pass (`pnpm lint` with one warning in `CurvedHeader.tsx`, `pnpm typecheck`, and `pnpm test`: 86 suites / 803 tests); grouping and commits remain pending. This supersedes the earlier Q9 decision to wait for the phone run before committing. It does not claim the phone run has happened.
+**Working-tree and commit note (2026-10-25):** the 2026-10-23 implementation and documentation changes were committed in logical groups after the owner's explicit request. Repository checks passed (`pnpm lint` with one warning in `CurvedHeader.tsx`, `pnpm typecheck`, and `pnpm test`: 86 suites / 803 tests). The working tree is clean. This supersedes the earlier Q9 decision to wait for the phone run before committing; it does not claim the phone run has happened.
 
 **Reconciliation note (2026-10-25):** later implementation records in `project-status.md` and the feature plans supersede stale
 2026-10-22 statements below about notices/inbox, calendar, exam attendance, and the number of teacher screens. Those features
@@ -22,8 +22,8 @@ checklist; their status text is updated where later evidence changes it. No phas
 Where things stood on 2026-10-22, from `project-status.md` and `TEACHER_APP_PLAN.md`:
 
 - The five-tab teacher shell, My Attendance, the Academic hub, Profile and the review fixes are **built and
-  unit-tested** (`pnpm verify` 2026-10-22: 58 suites, 556 tests; the Android bundle exports). **Nothing has run in the app
-  on a phone. Nothing is committed** (a peer session also left about 70 uncommitted files here).
+  unit-tested** (`pnpm verify` 2026-10-22: 58 suites, 556 tests; the Android bundle exports). **Nothing had run in the app
+  on a phone at that 2026-10-22 snapshot.** The working-tree and commit status is recorded above; these historical counts are not current checks.
 - Teacher Home, My classes and Student attendance are built and unit-tested, likewise not run on a phone.
 - **Marks entry is built and unit-tested** (2026-10-22, `MARKS_PLAN.md`). Its server contract and the attendance and
   self-attendance contracts were **Reproduced over HTTP against a test stack** (plan E-M2, E9). The app has not run on a phone.
@@ -214,7 +214,7 @@ the flows run on a device with a guardian who has two children.
 | P4.5 | Confirm the API and database migrations are applied to the **intended** environments and name them (the test stack, the development database, any staging or production). The mobile docs do not yet say which stack each check ran on | Owner | Not started |
 | P4.6 | Close the open security items: implement and verify the S-9 client behavior (V-D3), resolve the unscoped attendance reports (`/reports/attendance/*`) in the backend repo, and close the backend's own 8.4 gates | Owner (backend repo) / Claude (mobile S-9) | V-D3 is decided; mobile implementation remains pending. Backend report scoping and backend 8.4 gates remain separate follow-ups |
 | P4.7 | Reconcile mobile documentation with current backend status (§2); propose protected roadmap changes only for owner approval; update API documentation only for real contract gaps | Claude, owner for protected files | Mobile `project-status.md`, this delivery plan, and deferred-work requirements reconciled 2026-10-25. `roadmap.md` remains protected and unchanged pending explicit approval |
-| P4.8 | Separate the mobile changes from unrelated and peer-session work; review, verify and commit requested changes in logical groups | Claude | Owner authorized grouped commits on 2026-10-25. Documentation reconciliation and repository checks are complete; staging and commits remain pending |
+| P4.8 | Separate the mobile changes from unrelated and peer-session work; review, verify and commit requested changes in logical groups | Claude | Completed 2026-10-25: changes committed in logical groups after documentation reconciliation and repository checks; working tree clean |
 | P4.9 | Document release limitations (no offline writes, no exam routine, text-only notices, whatever the device run shows) | Claude | Not started |
 
 **Exit gate:** automated checks and device tests pass, the release limitations are documented, and both apps use the same
@@ -308,7 +308,7 @@ and the same for SI-D1 to SI-D6 (`STUDENT_INFO_PLAN.md`) and GV-D1 to GV-D9 (`GU
 | Q6 | raise ask B now, A and C later | the owner raises it |
 | Q7 | leave the month stepper unbounded | nothing to do |
 | Q8 | Jest `testTimeout: 20000` | **Done** (`package.json`); the full suite ran without the cold-start timeout afterwards |
-| Q9 | wait for the phone run, then commit by group | Superseded by the owner's explicit 2026-10-25 instruction to complete documentation and commit all changes in logical groups; repository checks passed, staging and commits remain pending |
+| Q9 | wait for the phone run, then commit by group | Superseded by the owner's explicit 2026-10-25 instruction; grouped commits were created after checks and before the phone run. Device verification remains pending |
 | Q10 | add "or ask your school to give you the Teacher role" | **Done** (`useWeb.body`, en and ne) |
 
 What it takes to start the three deferred items (plain-403 cache wipe, row-level security on roles, B11 onboarding), with the
