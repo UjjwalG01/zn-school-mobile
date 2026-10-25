@@ -12,6 +12,7 @@ import type {
 } from '../../../api/types/academic';
 import type {
   ExamComponent,
+  ExamComponentType,
   MarksSubmission,
   TeacherExam,
   TeacherExamSubject,
@@ -112,6 +113,46 @@ export function studentMarks(
     changed: entry !== undefined && isChanged(entry, result),
     numbers: complete ? fields.map((field) => (field.parsed.kind === 'ok' ? field.parsed.value : 0)) : null,
   };
+}
+
+// --- The table's columns ----------------------------------------------------------------------
+
+/** One column of the marks table. `component` is null for a column this subject does not have: the cell is disabled. */
+export interface MarkColumn {
+  key: string;
+  title: string;
+  component: ExamComponent | null;
+}
+
+const TYPE_ORDER: readonly ExamComponentType[] = ['theory', 'practical', 'cas', 'internal', 'project', 'viva', 'other'];
+
+/**
+ * The columns for a subject's components. Applicability is what the backend sent, nothing inferred:
+ * - while the components carry no `componentType` (the API does not send it yet) each one is a column under its own name;
+ * - with types, Theory then Practical come first and always exist, so a subject that has no practical component shows a
+ *   disabled Practical cell (`component: null`) and nothing is ever sent for it; other types follow in the web's order.
+ * A type that has several components keeps their own names, so two theory papers are not both called "Theory".
+ */
+export function markColumns(
+  components: readonly ExamComponent[],
+  typeTitle: (type: ExamComponentType) => string,
+): MarkColumn[] {
+  if (components.length === 0 || components.some((component) => component.componentType === undefined)) {
+    return components.map((component) => ({ key: component.id, title: component.name, component }));
+  }
+  const ofType = (type: ExamComponentType): MarkColumn[] => {
+    const same = components.filter((component) => component.componentType === type);
+    return same.map((component) => ({
+      key: component.id,
+      title: same.length > 1 ? component.name : typeTitle(type),
+      component,
+    }));
+  };
+  const lead = (type: 'theory' | 'practical'): MarkColumn[] => {
+    const columns = ofType(type);
+    return columns.length > 0 ? columns : [{ key: type, title: typeTitle(type), component: null }];
+  };
+  return [...lead('theory'), ...lead('practical'), ...TYPE_ORDER.slice(2).flatMap(ofType)];
 }
 
 // --- The draft --------------------------------------------------------------------------------

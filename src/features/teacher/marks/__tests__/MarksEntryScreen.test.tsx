@@ -133,8 +133,11 @@ describe('opening a subject', () => {
     expect(getExamRoster).toHaveBeenCalledWith({ examId: 'x1', sectionId: 's8' });
     expect(getExamResults).toHaveBeenCalledWith('x1');
     await waitFor(() => expect(mockTitle).toHaveBeenLastCalledWith('Mathematics'));
+    // Exam, class, subject and session are said once, in the summary above the table.
     expect(screen.getByText('Second Terminal')).toBeTruthy();
-    expect(screen.getByText('2083 · Class 8 · A')).toBeTruthy();
+    expect(screen.getByText('Class 8 · A')).toBeTruthy();
+    expect(screen.getByText('Mathematics')).toBeTruthy();
+    expect(screen.getByText('2083')).toBeTruthy();
     // Bina's marks are saved: shown without trailing zeros; the others are empty.
     expect(field('Bina Thapa', THEORY).props.value).toBe('75');
     expect(field('Bina Thapa', PRACTICAL).props.value).toBe('18.5');
@@ -618,5 +621,101 @@ describe('retries, stale submissions and returned subjects', () => {
     await user.press(saveButton(1));
     await waitFor(() => expect(screen.queryByText(/must be between 0 and 80/)).toBeNull());
     expect(await screen.findByText('2 of 3 students complete')).toBeTruthy();
+  });
+});
+
+describe('the table', () => {
+  const withRolls = (rolls: (string | null)[]): ExamRosterRow[] =>
+    ROSTER.map((row, index) => ({ ...row, rollNumber: rolls[index] ?? null }));
+
+  it('lists one row per student, sorted by roll number (2 before 10, no roll last)', async () => {
+    jest.mocked(getExamRoster).mockResolvedValue(withRolls(['10', null, '2']));
+    await openEntry();
+
+    const order = screen.getAllByLabelText(/: Theory \(out of 80\)$/).map((node) => node.props.accessibilityLabel.split(':')[0]);
+    expect(order).toEqual(['Chandra Karki', 'Anil Rai', 'Bina Thapa']);
+    // The roll is its own column: shown beside the name, a dash for a student without one.
+    expect(screen.getByText('2')).toBeTruthy();
+    expect(screen.getByText('10')).toBeTruthy();
+    expect(screen.getByText('–')).toBeTruthy();
+  });
+
+  it('names each column and its maximum once, in the header, not in every row', async () => {
+    await openEntry();
+
+    expect(screen.getAllByText('Theory')).toHaveLength(1);
+    expect(screen.getAllByText('/ 80')).toHaveLength(1);
+    expect(screen.getAllByText('Practical')).toHaveLength(1);
+    expect(screen.getAllByText('/ 20')).toHaveLength(1);
+    expect(screen.getByText('Roll')).toBeTruthy();
+    expect(screen.getByText('Student')).toBeTruthy();
+  });
+
+  it('counts unsaved students beside the progress line, and clears it once they are saved', async () => {
+    jest.mocked(postBulkMarks).mockResolvedValue({ ok: true, replayed: false, results: [result('anil', 1, '70', '15')] });
+    await openEntry();
+    const user = userEvent.setup();
+    expect(screen.queryByText(/^Unsaved:/)).toBeNull();
+
+    await enter('Anil Rai', THEORY, '70');
+    expect(screen.getByText('Unsaved: 1')).toBeTruthy();
+
+    await enter('Anil Rai', PRACTICAL, '15');
+    await user.press(saveButton(1));
+    await waitFor(() => expect(screen.queryByText(/^Unsaved:/)).toBeNull());
+  });
+
+  it('locks the boxes while a save is in flight', async () => {
+    let finish: (value: { ok: true; replayed: false; results: ExamResult[] }) => void = () => undefined;
+    jest.mocked(postBulkMarks).mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    await openEntry();
+    const user = userEvent.setup();
+    await enter('Anil Rai', THEORY, '70');
+    await enter('Anil Rai', PRACTICAL, '15');
+
+    await user.press(saveButton(1));
+    await waitFor(() => expect(field('Anil Rai', THEORY).props.editable).toBe(false));
+
+    await act(async () => finish({ ok: true, replayed: false, results: [result('anil', 1, '70', '15')] }));
+    await waitFor(() => expect(field('Anil Rai', THEORY).props.editable).toBe(true));
+  });
+
+  describe('when the backend says what kind of mark each component is', () => {
+    const open = async (components: ExamComponent[]) => {
+      const list = exams();
+      list[0]!.subjects[0]!.components = components;
+      jest.mocked(getTeacherExams).mockResolvedValue(list);
+      await openEntry();
+    };
+    const THEORY_T: ExamComponent = { ...THEORY, componentType: 'theory' };
+    const PRACTICAL_T: ExamComponent = { ...PRACTICAL, componentType: 'practical' };
+
+    it('puts Theory before Practical whatever order they arrive in', async () => {
+      await open([PRACTICAL_T, THEORY_T]);
+
+      const labels = screen.getAllByLabelText(/^Anil Rai:/).map((node) => node.props.accessibilityLabel);
+      expect(labels).toEqual(['Anil Rai: Theory (out of 80)', 'Anil Rai: Practical (out of 20)']);
+    });
+
+    it('disables the Practical box for a subject without a practical component, and never sends it', async () => {
+      jest.mocked(getExamResults).mockResolvedValue([]);
+      await open([THEORY_T]);
+      const user = userEvent.setup();
+
+      const notApplicable = screen.getAllByLabelText('Anil Rai: Practical does not apply to this subject');
+      expect(notApplicable).toHaveLength(1);
+      expect(notApplicable[0]!.props.accessibilityState).toMatchObject({ disabled: true });
+      expect(screen.queryByLabelText('Anil Rai: Practical (out of 20)')).toBeNull();
+
+      // Theory alone completes the student: the disabled box is not a missing mark.
+      await enter('Anil Rai', THEORY_T, '70');
+      expect(screen.queryByText('Enter every mark for this student')).toBeNull();
+      await user.press(saveButton(1));
+
+      await waitFor(() => expect(postBulkMarks).toHaveBeenCalledTimes(1));
+      expect(jest.mocked(postBulkMarks).mock.calls[0]![0].items).toEqual([
+        { enrollmentId: 'e-anil', components: [{ examComponentId: THEORY.id, obtainedMarks: 70 }], version: 0 },
+      ]);
+    });
   });
 });

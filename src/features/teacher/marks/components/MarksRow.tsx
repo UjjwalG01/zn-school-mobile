@@ -1,16 +1,17 @@
 import { memo } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import type { ExamResult, ExamRosterRow } from '../../../../api/types/academic';
-import type { ExamComponent } from '../../../../api/types/portal';
 import { Banner } from '../../../../components/Banner';
 import { Button } from '../../../../components/Button';
-import { Card } from '../../../../components/Card';
 import { Text } from '../../../../components/Text';
-import { TextField } from '../../../../components/TextField';
 import { t } from '../../../../i18n';
 import { useTheme } from '../../../../theme/useTheme';
-import { type DraftStudent, formatMarks, studentMarks } from '../marksModel';
+import { type DraftStudent, formatMarks, type MarkColumn, studentMarks } from '../marksModel';
+import { ID_MIN_WIDTH, MarkCell, ROLL_WIDTH } from './MarkCell';
+
+/** The emphasis stripe at the start of a row that needs attention. */
+const STRIPE = 3;
 
 export interface MarksRowProps {
   row: ExamRosterRow;
@@ -18,8 +19,9 @@ export interface MarksRowProps {
   result: ExamResult | undefined;
   /** The teacher's unsaved edit for this student, if any. */
   entry: DraftStudent | undefined;
-  components: readonly ExamComponent[];
-  /** The subject was submitted: shown, not editable. */
+  columns: readonly MarkColumn[];
+  cellWidth: number;
+  /** The subject was submitted, or a save is in flight: shown, not editable. */
   readOnly: boolean;
   /** The saved result moved on since the teacher edited this student. */
   conflict: boolean;
@@ -31,14 +33,16 @@ export interface MarksRowProps {
 }
 
 /**
- * One student with one numeric field per component. Memoized and fed stable callbacks, so typing for
- * one student re-renders one row (a class can reach 200 students on a low-end phone).
+ * One student on one line: roll number, name, and a box per column. Memoized and fed stable callbacks, so typing for one
+ * student re-renders one row (a class can reach 200 students on a low-end phone). What needs saying about a student (a
+ * mark out of range, a missing mark, a conflict, a refusal) is added under the line, so a clean row stays one line.
  */
 export const MarksRow = memo(function MarksRow({
   row,
   result,
   entry,
-  components,
+  columns,
+  cellWidth,
   readOnly,
   conflict,
   failure,
@@ -46,43 +50,68 @@ export const MarksRow = memo(function MarksRow({
   onKeepMine,
   onDiscard,
 }: MarksRowProps) {
-  const { spacing } = useTheme();
+  const { colors, spacing } = useTheme();
+  const components = columns.flatMap((column) => (column.component ? [column.component] : []));
   const state = studentMarks(components, entry, result);
-  const details = [row.rollNumber ? t('attendance.roll', { number: row.rollNumber }) : null, row.admissionNumber]
-    .filter(Boolean)
-    .join(' · ');
+  const fieldOf = new Map(state.fields.map((field) => [field.component.id, field]));
+  const problems = columns.flatMap((column) => {
+    const field = column.component ? fieldOf.get(column.component.id) : undefined;
+    return field?.problem && column.component ? [{ column, problem: field.problem, max: formatMarks(column.component.maxMarks) }] : [];
+  });
   // Only when nothing is wrong with a field yet: a field problem already says what to fix.
-  const incomplete = state.changed && !state.complete && state.fields.every((field) => field.problem === null);
+  const incomplete = state.changed && !state.complete && problems.length === 0;
+  const stripe = conflict ? colors.warning : failure ? colors.destructive : colors.bg;
 
   return (
-    <Card emphasis={conflict ? 'warning' : failure ? 'danger' : undefined}>
-      <Text variant="bodyLarge" style={{ fontWeight: '600' }}>
-        {row.fullName}
-      </Text>
-      {details ? (
-        <Text variant="caption" tone="muted">
-          {details}
-        </Text>
-      ) : null}
-
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-        {state.fields.map(({ component, text, problem }) => {
-          const max = formatMarks(component.maxMarks);
-          return (
-            <View key={component.id} style={{ flexGrow: 1, flexBasis: 140 }}>
-              <TextField
-                label={t('marks.field', { name: component.name, max })}
-                accessibilityLabel={t('marks.fieldFor', { name: row.fullName, component: component.name, max })}
-                value={text}
-                keyboardType="decimal-pad"
+    <View
+      style={[
+        styles.item,
+        { borderBottomColor: colors.border, borderStartColor: stripe, paddingVertical: spacing.xs, gap: spacing.xs },
+      ]}
+    >
+      <View style={[styles.line, { columnGap: spacing.sm, rowGap: spacing.xs }]}>
+        <View style={[styles.id, { minWidth: ID_MIN_WIDTH }]}>
+          <Text variant="caption" tone="muted" style={{ width: ROLL_WIDTH }}>
+            {row.rollNumber ?? '–'}
+          </Text>
+          <Text style={styles.name} numberOfLines={2}>
+            {row.fullName}
+          </Text>
+        </View>
+        <View style={[styles.cells, { gap: spacing.xs }]}>
+          {columns.map((column) => {
+            const field = column.component ? fieldOf.get(column.component.id) : undefined;
+            const max = column.component ? formatMarks(column.component.maxMarks) : '';
+            return (
+              <MarkCell
+                key={column.key}
+                width={cellWidth}
+                text={field?.text ?? ''}
+                applicable={column.component !== null}
                 editable={!readOnly}
-                error={problem ? t(`marks.error.${problem}`, { max }) : null}
-                onChangeText={(next) => onChange(row.enrollmentId, result, component.id, next)}
+                invalid={Boolean(field?.problem)}
+                accessibilityLabel={
+                  column.component
+                    ? t('marks.fieldFor', { name: row.fullName, component: column.component.name, max })
+                    : t('marks.notApplicable', { name: row.fullName, component: column.title })
+                }
+                onChangeText={(text) => column.component && onChange(row.enrollmentId, result, column.component.id, text)}
               />
-            </View>
-          );
-        })}
+            );
+          })}
+        </View>
       </View>
+
+      {problems.map(({ column, problem, max }) => (
+        <View key={column.key} style={[styles.note, { gap: spacing.xs }]}>
+          <Text variant="caption" tone="error" style={styles.bold}>
+            {column.title}
+          </Text>
+          <Text variant="caption" tone="error" accessibilityLiveRegion="polite">
+            {t(`marks.error.${problem}`, { max })}
+          </Text>
+        </View>
+      ))}
 
       {incomplete ? (
         <Text variant="caption" tone="muted">
@@ -103,6 +132,16 @@ export const MarksRow = memo(function MarksRow({
           {failure}
         </Text>
       ) : null}
-    </Card>
+    </View>
   );
+});
+
+const styles = StyleSheet.create({
+  item: { borderBottomWidth: StyleSheet.hairlineWidth, borderStartWidth: STRIPE },
+  line: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
+  id: { flex: 1, flexDirection: 'row', alignItems: 'center' },
+  name: { flex: 1, fontWeight: '600' },
+  cells: { flexDirection: 'row' },
+  note: { flexDirection: 'row' },
+  bold: { fontWeight: '700' },
 });

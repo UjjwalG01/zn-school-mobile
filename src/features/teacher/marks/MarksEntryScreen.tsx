@@ -9,10 +9,12 @@ import { Alert, View } from 'react-native';
 import type { ExamComponent } from '../../../api/types/portal';
 import { Banner } from '../../../components/Banner';
 import { Button } from '../../../components/Button';
+import { Card } from '../../../components/Card';
 import { ListScreen } from '../../../components/ListScreen';
 import { OfflineBanner, savedDataTimestamp } from '../../../components/OfflineBanner';
 import { QueryState, queryView } from '../../../components/QueryState';
 import { Screen } from '../../../components/Screen';
+import { StatusBadge } from '../../../components/StatusBadge';
 import { Text } from '../../../components/Text';
 import { t } from '../../../i18n';
 import { showToast } from '../../../lib/toast';
@@ -22,7 +24,9 @@ import { useManualRefresh } from '../../useManualRefresh';
 import { useUnsavedGuard } from '../../useUnsavedGuard';
 import { placementLabel } from '../placement';
 import { useTeacherExams } from '../queries';
+import { cellWidthFor } from './components/MarkCell';
 import { MarksRow } from './components/MarksRow';
+import { MarksTableHeader } from './components/MarksTableHeader';
 import {
   buildItems,
   changedCount,
@@ -31,6 +35,7 @@ import {
   findSlot,
   indexResults,
   MAX_BULK_ITEMS,
+  markColumns,
   type SlotRef,
   saveCounts,
   sortRoster,
@@ -77,13 +82,32 @@ function noticeFor(
   }
 }
 
+/**
+ * Memoized by hand (the React Compiler is not on in this build): a new array each render would re-render every memoized row on
+ * every key. A hook of its own so nothing else in the screen's body makes the lint think `components` may change.
+ */
+function useMarkColumns(components: readonly ExamComponent[]) {
+  return useMemo(() => markColumns(components, (type) => t(`marks.type.${type}`)), [components]);
+}
+
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <View>
+      <Text variant="caption" tone="muted">
+        {label}
+      </Text>
+      <Text style={{ fontWeight: '600' }}>{value}</Text>
+    </View>
+  );
+}
+
 export default function MarksEntryScreen() {
   const params = useLocalSearchParams<{ examId?: string; examSubjectId?: string; sectionId?: string }>();
   const examId = single(params.examId) ?? '';
   const examSubjectId = single(params.examSubjectId) ?? '';
   const slotRef: SlotRef = { examId, examSubjectId, sectionId: single(params.sectionId) ?? null };
 
-  const { spacing } = useTheme();
+  const { colors, spacing } = useTheme();
   const exams = useTeacherExams();
   const slot = exams.data && examId && examSubjectId ? findSlot(exams.data, slotRef) : null;
   const roster = useExamRoster(slot ? { examId, sectionId: slotRef.sectionId } : null);
@@ -101,6 +125,7 @@ export default function MarksEntryScreen() {
   const rows = useMemo(() => sortRoster(roster.data ?? []), [roster.data]);
   const byEnrollment = useMemo(() => indexResults(results.data ?? []), [results.data]);
   const components = slot?.subject.components ?? NO_COMPONENTS;
+  const columns = useMarkColumns(components);
   const changed = changedCount(rows, byEnrollment, draft);
   useUnsavedGuard(changed > 0, t('marks.discardBody'));
 
@@ -145,6 +170,7 @@ export default function MarksEntryScreen() {
   const savedFrom = savedDataTimestamp([exams, roster, results]);
 
   const busy = saving || submitting;
+  const cellWidth = cellWidthFor(columns.length);
   const canSave = !readOnly && ready > 0 && ready <= MAX_BULK_ITEMS && conflicts.size === 0 && !busy;
   // `exams.isFetching`: a save opens the backend's draft row, and Submit must send the version it now has.
   const canSubmit =
@@ -200,22 +226,33 @@ export default function MarksEntryScreen() {
       <ListScreen
         sections={sections}
         keyExtractor={(row) => row.enrollmentId}
-        extraData={{ draft, failures, readOnly, byEnrollment, conflicts }}
+        extraData={{ draft, failures, readOnly, busy, byEnrollment, conflicts, columns }}
         refreshing={refreshing}
         onRefresh={onRefresh}
         keyboardShouldPersistTaps="handled"
-        initialNumToRender={8}
+        initialNumToRender={12}
         windowSize={5}
+        stickySectionHeadersEnabled
+        renderSectionHeader={() => <MarksTableHeader columns={columns} cellWidth={cellWidth} />}
         ListHeaderComponent={
-          <View style={{ gap: spacing.md }}>
-            <View style={{ gap: spacing.xs }}>
-              <Text variant="bodyLarge" style={{ fontWeight: '600' }}>
+          <View style={{ gap: spacing.md, paddingBottom: spacing.sm }}>
+            {/* Exam, class and subject once, here, instead of in every student row. */}
+            <Card tint={colors.accent}>
+              <Text variant="caption" tone="muted">
+                {t('marks.header.exam')}
+              </Text>
+              <Text variant="title" accessibilityRole="header">
                 {exam.name}
               </Text>
-              <Text tone="muted">
-                {`${exam.sessionName} · ${placementLabel({ className: exam.className, sectionName: subject.sectionName })}`}
-              </Text>
-            </View>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.lg, rowGap: spacing.xs }}>
+                <Fact
+                  label={t('marks.header.class')}
+                  value={placementLabel({ className: exam.className, sectionName: subject.sectionName })}
+                />
+                <Fact label={t('marks.header.subject')} value={subject.subjectName} />
+                <Fact label={t('marks.header.session')} value={exam.sessionName} />
+              </View>
+            </Card>
             <OfflineBanner asOf={savedFrom} />
             {submission?.status === 'returned' ? (
               <Banner tone="warning">
@@ -225,7 +262,12 @@ export default function MarksEntryScreen() {
               </Banner>
             ) : null}
             {readOnly ? <Banner tone="info">{t('marks.submittedBanner')}</Banner> : null}
-            {rows.length > 0 ? <Text>{t('marks.summary', { complete, total: rows.length })}</Text> : null}
+            {rows.length > 0 ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
+                <Text>{t('marks.summary', { complete, total: rows.length })}</Text>
+                {changed > 0 ? <StatusBadge tone="warning" label={t('marks.unsaved', { count: changed })} /> : null}
+              </View>
+            ) : null}
           </View>
         }
         ListEmptyComponent={<Text tone="muted">{t('marks.noStudents')}</Text>}
@@ -234,8 +276,9 @@ export default function MarksEntryScreen() {
             row={item}
             result={byEnrollment.get(item.enrollmentId)}
             entry={draft[item.enrollmentId]}
-            components={components}
-            readOnly={readOnly}
+            columns={columns}
+            cellWidth={cellWidth}
+            readOnly={readOnly || busy}
             conflict={conflicts.has(item.enrollmentId)}
             failure={failures[item.enrollmentId]}
             onChange={setValue}

@@ -13,6 +13,7 @@ import {
   indexResults,
   isChanged,
   keepMine,
+  markColumns,
   mergeResults,
   parseMark,
   payloadSignature,
@@ -271,6 +272,70 @@ describe('sortRoster', () => {
   it('sorts roll numbers numerically, missing last, then by name', () => {
     const rows = [student('x', '10'), student('y', null), student('z', '2'), student('w', null)];
     expect(sortRoster(rows).map((row) => row.admissionNumber)).toEqual(['z', 'x', 'w', 'y']);
+  });
+});
+
+describe('markColumns', () => {
+  const title = (type: string) => type.toUpperCase();
+  const typed = (id: string, componentType: NonNullable<ExamComponent['componentType']>, name = id): ExamComponent => ({
+    id,
+    name,
+    maxMarks: '50.00',
+    componentType,
+  });
+
+  it('is one column per component under its own name while the backend sends no type', () => {
+    const columns = markColumns(COMPONENTS, title);
+    expect(columns.map((column) => [column.key, column.title, column.component?.id])).toEqual([
+      ['c-theory', 'Theory', 'c-theory'],
+      ['c-prac', 'Practical', 'c-prac'],
+    ]);
+  });
+
+  it('never reads the type from the name, a mark or a zero: a theory-only subject stays one column', () => {
+    const columns = markColumns([{ id: 'c1', name: 'Practical Exam', maxMarks: '0.00' }], title);
+    expect(columns).toHaveLength(1);
+    expect(columns[0]!.component?.id).toBe('c1');
+  });
+
+  it('treats a mix of typed and untyped components as untyped (nothing is guessed)', () => {
+    const columns = markColumns([typed('a', 'theory'), { id: 'b', name: 'Practical', maxMarks: '20.00' }], title);
+    expect(columns.map((column) => column.title)).toEqual(['a', 'Practical']);
+  });
+
+  it('puts Theory then Practical first whatever order the backend listed them in', () => {
+    const columns = markColumns([typed('p', 'practical'), typed('t', 'theory')], title);
+    expect(columns.map((column) => [column.title, column.component?.id])).toEqual([
+      ['THEORY', 't'],
+      ['PRACTICAL', 'p'],
+    ]);
+  });
+
+  it('gives a subject without a practical component a disabled Practical column, not a missing one', () => {
+    const columns = markColumns([typed('t', 'theory')], title);
+    expect(columns).toEqual([
+      { key: 't', title: 'THEORY', component: expect.objectContaining({ id: 't' }) },
+      { key: 'practical', title: 'PRACTICAL', component: null },
+    ]);
+  });
+
+  it('does the same for a missing Theory, and keeps other kinds after the two', () => {
+    const columns = markColumns([typed('v', 'viva'), typed('p', 'practical'), typed('i', 'internal')], title);
+    expect(columns.map((column) => [column.title, column.component?.id ?? null])).toEqual([
+      ['THEORY', null],
+      ['PRACTICAL', 'p'],
+      ['INTERNAL', 'i'],
+      ['VIVA', 'v'],
+    ]);
+  });
+
+  it('keeps the papers’ own names when a type has several components', () => {
+    const columns = markColumns([typed('t1', 'theory', 'Paper 1'), typed('t2', 'theory', 'Paper 2'), typed('p', 'practical')], title);
+    expect(columns.map((column) => column.title)).toEqual(['Paper 1', 'Paper 2', 'PRACTICAL']);
+  });
+
+  it('has no columns for no components', () => {
+    expect(markColumns([], title)).toEqual([]);
   });
 });
 
