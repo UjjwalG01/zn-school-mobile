@@ -139,6 +139,29 @@ the save takes numbers.
 | `GET /calendar?from=&to=` | `calendar.read` (licence `academic`) | `from`/`to` are AD `YYYY-MM-DD`, at most 400 days apart (else 400). `{ from, to, events, holidays, leave, weeklyOff }`: items that overlap the window with their **real** dates. The server filters for the reader (audience, staff type, class assignment); an `event.manage` holder also gets `internalNotes` and `audience`, and a leave item names the staff member, so the app keeps only `kind, id, title (event title / holiday name / "staff: leave type"), typeLabel, color, startDate, endDate, description` and drops the rest before it can reach the cache. `weeklyOff` lists switched-off weekdays (0 = Sunday). A plain 403 is "no access", not an empty calendar. The app asks for one month window (the month of the school's own calendar, converted to AD) and one "upcoming" window (today + 60 days) |
 | `GET /portal/notices?page=1&pageSize=5` | membership | published, active notices this person may read, newest first: `{ rows: [{ id, title, body, audience, classId, sectionId, publishedAt }], total, page, pageSize }`. Staff see `staff` and `all` notices; a scoped notice reaches only staff assigned there today. The app keeps `id, title, body, publishedAt` and filters nothing |
 
+**Notification inbox and the header bell** (`teacher.notifications`, a card in the More hub and the bell at the end of every teacher page header, built 2026-10-23; `src/api/notifications.ts`; plan `docs/project/HEADER_BELL_AND_UX_PLAN.md`):
+
+| Method & path | Permission | Use |
+| --- | --- | --- |
+| `GET /portal/notifications?page=1&pageSize=30` | membership only (no licence key yet) | the caller's own inbox, newest first: `{ rows: [{ id, type, referenceId, title, readAt, createdAt }], total, unread, page, pageSize }`. `unread` counts every unread row, whatever the page: it is the badge. One query for the bell and the list (Daily class, persisted, wiped with the school's cache). The app lists the newest 30 and says "Showing the newest 30 of N" past that |
+| `POST /portal/notifications/:id/read` | membership only | `{ id, readAt }`, idempotent (a second call keeps the first time). Another person's id, another school's id and a missing id are all 404. The app patches the cached page from the answer and does not refetch; a failure leaves the row unread and shows one toast |
+
+Who is told what is the backend's (ENDPOINTS.md §7f): `SchoolEventPublished` (on **create** of an event whose type has `notify`; an edit
+tells nobody), `NoticePublished`, `LeaveSubmitted` / `LeaveDecided`, and the guardian-only `StudentMarkedAbsent` / `ResultsPublished`.
+**Holiday changes raise no event**, so no holiday notification exists (request B19). A tap opens the Academic Calendar for
+`school_event` and `notice_published` when the calendar is visible to this teacher; the row carries no date, so no day is selected
+(request B20); every other type is only marked read. The app never sends a push token (push needs an Expo project and a development
+build; M4). Push registration `POST /portal/devices` is not called.
+
+**Dashboard "My Attendance This Month"** reads `GET /attendance/staff/self` (no `month`: the school's current month) once, with the
+same cache entry as My Attendance. It counts the caller's own records by status; nothing is computed beyond counts. 404 (no staff
+link) and 403 (no `attendance.self`) hide the card.
+
+**Marks components.** `GET /portal/teacher/exams` returns each component as `{ id, name, maxMarks }`; the database knows
+`component_type` (theory, practical, cas, internal, project, viva, other) but the route does not send it (verified on the test API
+2026-10-23). The app reads an optional `componentType` if it is ever sent (request B18) and never infers it from `name`, a missing
+mark or a zero.
+
 **Exam attendance** (`teacher.exam-attendance`, a card in the Academic hub, built 2026-10-23; `src/api/examAttendance.ts`; the same filter step as marks entry):
 
 | Method & path | Permission | Use |
@@ -168,8 +191,8 @@ already the right ones. Exam attendance never changes marks, grades or daily att
 | `GET /portal/guardian/home`                                                                                              | B7     | later (not in backend Phase 5; compose from `students`) |
 | `GET /portal/guardian/students` — **built (backend P5)**                                                                  | B4, B7 | WP-4, WP-5   |
 | `GET /portal/guardian/students/:studentId` (profile), `/attendance?dateFrom&dateTo`, `/results` (released only), `/fees` (financial position plus payments) — **built (backend P5)**; they replace the proposed `/profile`, `/financial-position`, `/invoices`, `/payments`. **Reproduced over HTTP 2026-10-22 for the students, profile, attendance and fees routes and for the refusal of another family's child (`GUARDIAN_V1_PLAN.md` §2.1); results only with no data** | B7, B8 | WP-5         |
-| `GET /portal/notifications?page&pageSize&unreadOnly` — **built (backend P6)**: the caller's own inbox, `{ rows: [{ id, type, referenceId, title, readAt, createdAt }], total, unread, page, pageSize }`. `type` says what `referenceId` is: `student_absent` → the student, `results_published` → the exam, `notice_published` → the notice. Membership only, for staff and guardians alike | B10 | WP-7 |
-| `POST /portal/notifications/:id/read` — **built (backend P6)**: idempotent, own rows only (another person's id is a 404) | B10 | WP-7 |
+| `GET /portal/notifications?page&pageSize&unreadOnly` — **built (backend P6); the inbox and bell use it since 2026-10-23, see §2**: the caller's own inbox, `{ rows: [{ id, type, referenceId, title, readAt, createdAt }], total, unread, page, pageSize }`. `type` says what `referenceId` is: `student_absent` → the student, `results_published` → the exam, `notice_published` → the notice. Membership only, for staff and guardians alike | B10 | WP-7 |
+| `POST /portal/notifications/:id/read` — **built (backend P6); used since 2026-10-23, see §2**: idempotent, own rows only (another person's id is a 404) | B10 | WP-7 |
 | `GET /portal/notices?page&pageSize` — **built (backend P6)**: published notices for the caller's audience and class scope; a guardian needs `portal.notices.read` (else 403) | B10 | WP-7 |
 | `POST /portal/devices { token, platform }` and `DELETE /portal/devices { token }` — **built (backend P6)**: register or remove the Expo push token of the signed-in person (no `tenantId`; a token moves to whoever registers it last, so call `DELETE` on logout). A push carries only a generic title and `data { type, referenceId, notificationId }`: open the screen from `data`; never show names, marks or amounts on the lock screen | B10 | WP-7 |
 | `GET /portal/guardian/invoices/:id/pdf`, `/payments/:id/receipt`, `/results/:id/marksheet`, `/exam-sessions/:id/routine` | B7     | later (not built) |

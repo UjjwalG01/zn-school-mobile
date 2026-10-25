@@ -480,3 +480,21 @@ or `exam_result.save`; the marks screen calls it for the exam it opened, so the 
 setup reads are membership-only. All three are reproduced in the backend repository's `apps/api/test/default-teacher-access.e2e-spec.ts` (`it.failing`
 cases F-1 to F-4). The phone calls only the scoped portal routes for names and rosters, so the app's own screens are not affected; the marks
 screen's results call is the one place it touches F-1.
+
+---
+
+# 18. Header bell, marks table and dashboard chart — requests B18 to B20 (2026-10-23), proposed
+
+**Status: proposed, nothing built, nothing changed in the web/API repository.** They come from the owner's brief of 2026-10-23 (notification bell,
+"My Attendance This Month", Theory/Practical marks table); the app work is in `docs/project/HEADER_BELL_AND_UX_PLAN.md`. Each is small and
+additive, and the app works without it (the fallback is in the third column).
+
+| Item | What the app needs | Without it |
+| --- | --- | --- |
+| **B18** | `GET /portal/teacher/exams` sends `componentType` (`theory`, `practical`, `cas`, `internal`, `project`, `viva`, `other`) with each component: `components: [{ id, name, maxMarks, componentType }]`. The value is already in `exam_components.component_type` (migration `0113`, `NOT NULL`) and the route already reads that table (`exam-result.service.ts`, the `.map(({ id, name, maxMarks }) => …)` near line 888 drops it). Evidence: on the mobile test API the Mathematics components are `[{"id":…,"name":"Theory","maxMarks":"80.00"},{"id":…,"name":"Practical","maxMarks":"20.00"}]` | The marks table has one column per component under its own name. It cannot tell Theory from Practical, so it cannot show a disabled Practical box for a subject that has none, and it will not guess from the name (the brief forbids inferring applicability) |
+| **B19** | Holiday create / change / deactivate raises an outbox event the Communication fan-out turns into inbox rows for the staff (and guardians) the holiday applies to (its audience is already on the holiday). Today the only calendar event is `SchoolEventPublished` (`calendar-events.contract.ts`); there is no holiday contract, so a holiday appears in `GET /calendar` and notifies nobody | Teachers see a new holiday only by opening the Academic Calendar. The bell shows events, notices, leave and (for guardians) absences and results |
+| **B20** (optional) | A `school_event` notification row carries the event's `startDate` (a new `date` column, or the title is left as it is and the date added to the row), so a tap can open that day. Today a row is `{ id, type, referenceId, title, readAt, createdAt }` and `referenceId` is the event id; `GET /calendar` has no get-by-id route for a non-manager | A tap opens the Academic Calendar at today. The event is in its Upcoming list when it is within 60 days |
+
+**Checked, not requested.** `POST /portal/notifications/:id/read` answers 404 for another person's id and for an unknown id, 403
+`TENANT_MEMBERSHIP_NOT_FOUND` for a school the caller does not belong to, and `GET /attendance/staff/self` ignores a `staffMemberId` or
+`userId` in the query. They were reproduced over HTTP on the mobile test API on 2026-10-23 (27 checks, `HEADER_BELL_AND_UX_PLAN.md` §6).

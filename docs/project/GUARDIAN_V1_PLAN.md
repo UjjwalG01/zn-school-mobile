@@ -8,7 +8,7 @@ access: Read
 
 ## Status
 
-**Draft, written 2026-10-22. Not approved. Nothing is built.** It details Phase 3 of `V1_DELIVERY_PLAN.md` (the task list
+**Draft, written 2026-10-22. Not approved. No Guardian mobile implementation is built.** It details Phase 3 of `V1_DELIVERY_PLAN.md` (the task list
 there stays the master list) and belongs to roadmap M1 part B and M3, with the guardian side of M4.
 
 **Gate (owner's recommendation, `V1_DELIVERY_PLAN.md` §5): do not start building before Phase 2 (Teacher V1) is verified on
@@ -22,7 +22,7 @@ exists, and the app has not been run on a phone. Where this plan and an older mo
 **Constraints that apply.** The backend owns all data and rules (mobile `CLAUDE.md` §3); no code in the web/API project
 (D1); no endpoint is called that `API_CONTRACT.md` does not mark as existing; no new dependency or native module without the
 owner's approval after seeing the alternative (the `simple-first` rule); protected files change only on approval with a shown
-diff (`roadmap.md`, `FEATURE_MODULES.md`, `ARCHITECTURE.md`, `BACKEND_PREREQUISITES.md`); nothing is committed.
+diff (`roadmap.md`, `FEATURE_MODULES.md`, `ARCHITECTURE.md`, `BACKEND_PREREQUISITES.md`); the 2026-10-25 grouped-commit request supersedes the earlier commit hold, subject to repository checks and review.
 
 ---
 
@@ -83,7 +83,7 @@ ENDPOINTS §7g but answered 404 on the older test image used here (built before 
 | same | attendance `?from&to` | `?dateFrom&dateTo` |
 | same | `…/financial-position`, `…/invoices`, `…/payments` | one `…/fees` (position with invoices, and payments) |
 | `AUTH_AND_SESSION.md` §2 | `POST /tenancy/memberships/activate { code, password }` | `POST /identity/activate { code, identifier, password }` |
-| `project-status.md`, `roadmap.md` M0 | B1 to B4, B8, B10 "not built" | built per the backend repo; reconcile as task P4.7 / P3.1 (roadmap is protected) |
+| `project-status.md`, `roadmap.md` M0 | Older mobile documents describe B1–B4, B8, B10 as unbuilt | Backend documentation reports these items built in whole or in part; the mobile status was reconciled 2026-10-25. Current target-environment state and some guardian live behavior remain unverified. `roadmap.md` is protected and unchanged pending owner approval |
 
 These are reconciled when each piece is built; `GUARDIAN_FEATURES.md` gets a status note now.
 
@@ -92,8 +92,7 @@ These are reconciled when each piece is built; `GUARDIAN_FEATURES.md` gets a sta
 # 3. Identity and shell
 
 1. **Login.** One field "Phone or e-mail" (sent as typed, trimmed; the server normalises: a national number gets +977), a
-   password, and `clientType: 'mobile'` on every login so the 7-day idle limit applies (without it the server applies the web
-   30 minutes). A 429 `AUTH_TOO_MANY_ATTEMPTS` shows a wait message and never retries. Unknown identifier, inactive account and
+   password, and `clientType: 'mobile'` on every login so the backend's mobile idle limit applies. The backend docs report B1/B2 built, but the mobile client remains email-only and this request is not implemented here yet. A 429 `AUTH_TOO_MANY_ATTEMPTS` shows a wait message and never retries. Unknown identifier, inactive account and
    wrong password are the same 401, so the message does not say which.
 2. **Activation.** Screen: code (8 characters; the server ignores case, spaces and hyphens and reads `O` as `0`, `I` and `L` as
    `1`, so the field does not police the characters), the phone or e-mail on record, a new password (min 8) with a confirmation.
@@ -105,12 +104,11 @@ These are reconciled when each piece is built; `GUARDIAN_FEATURES.md` gets a sta
 3. **Shell resolution.** Today `GUARDIAN_ROLE_AVAILABLE = false` in `src/auth/useSessionContext.ts` and `resolveShells` only
    knows the teacher rule. Proposed (GV-D2): the guardian shell is available when `my-permissions` holds `portal.student.read`
    (works for an account that is also a teacher), and `my-schools.audience === 'guardian'` is used to skip the teacher shell for
-   a pure guardian. The flag is removed. An account with both rules gets both shells and a switcher in Profile (GV-D8).
-4. **Forbidden, revoked, suspended.** Revocation by the school gives 403 immediately; the existing mapping drops or
-   re-resolves the school (`forbidden` refreshes permissions; `TENANT_MEMBERSHIP_NOT_FOUND` drops the school), ending on
-   "Use the web app" or "No school access". Wiping the school's cached data on a plain 403 (V-D3, decided 2026-10-22) is
-   built once for the whole app, with a loop guard; for a guardian it also means a 403 on a **child id** removes that child
-   from the local list.
+   a pure guardian. The flag is removed. An account with both rules gets both shells and a switcher in Profile (GV-D8). Backend-built status is not target-environment or device verification.
+4. **Forbidden, revoked, suspended.** Revocation by the school gives 403 immediately. `TENANT_MEMBERSHIP_NOT_FOUND` drops
+   the school; the generic `forbidden` action does not currently refresh permissions or wipe tenant cache. Wiping the school's
+   cached data on a plain 403 (V-D3, decided 2026-10-22) is planned for the whole app, with a loop guard, but is not yet
+   implemented; for a guardian, a 403 on a **child id** must also remove that child from the local list.
 5. **Shell isolation.** Guardian code lives under `app/guardian/` and `src/features/guardian/`; no teacher screen is
    reachable; shared components are reused, never copied (`mobile-frontend.md` §1).
 
@@ -138,7 +136,7 @@ shared components and the `[tenantId, …]` keys.
 
 | Step | Delivers | Needs | Exit criteria |
 | --- | --- | --- | --- |
-| G0 Prerequisites | owner answers §9; record B1 to B4, B8, B10 in `project-status.md` after checking ENDPOINTS (P3.1); a guardian test account on the test stack (the probe already creates one); reconcile `GUARDIAN_FEATURES.md`, `API_CONTRACT.md` §3 | owner | decisions recorded; docs match the built routes |
+| G0 Prerequisites | owner confirms target-environment B1 to B4, B8, B10 and the current ENDPOINTS contract; update `project-status.md`; a guardian test account on the test stack (the probe already creates one); reconcile `GUARDIAN_FEATURES.md`, `API_CONTRACT.md` §3 | owner | target environment and decisions recorded; docs match the built routes; this is not device verification |
 | G1 Identity | phone or e-mail login with `clientType`, activation screen, shell resolution without the flag, guardian shell skeleton with Profile (Sign out, Switch school), revoked / forbidden / no-school states; the **live check of the other two activation outcomes** (existing staff account; reset) | G0 | on the owner's phone: a school-issued code activates, the guardian logs in by phone, lands on the guardian shell, signs out; teacher login unchanged |
 | G2 Children and profile | children list, switcher, child profile, no-link state | G1 | two-child guardian switches; nothing of child A shows under child B |
 | G3 Attendance | month view, counts, empty and holiday states | G2 | numbers equal the API's; month change refetches |
@@ -198,8 +196,8 @@ Stack and phone: the probe in E-G1 is the API-side regression; the owner's phone
 # 9. Decisions (accepted as recommended by the owner, 2026-10-22; the recommendation column is the decision)
 
 By accepting GV-D1 the owner chose to **plan and decide now and build later**: G0 and G1 start after the marks phone run
-passes, the rest after Phase 2 is verified. So the Guardian build has not started. The plan above stays Draft until that
-gate opens.
+passes, the rest after Phase 2 is verified. No Guardian mobile implementation has started. The plan above stays Draft until
+that gate opens.
 
 | # | Decision | Recommendation |
 | --- | --- | --- |

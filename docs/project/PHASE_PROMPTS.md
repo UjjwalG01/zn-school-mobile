@@ -8,10 +8,7 @@ access: Read
 
 ## Status
 
-Written 2026-10-16 against `docs/project/roadmap.md` (same date). A prompt is guidance, not approval:
-backend prompts still stop at the ADR gate, and no prompt authorizes pulling work from a later
-phase. If the roadmap or a gate changes, change the prompt in the same edit. The order of the remaining work for the
-first release (four delivery phases, pending tasks, owners) is `docs/project/V1_DELIVERY_PLAN.md` (Draft 2026-10-22).
+Written 2026-10-16 against `docs/project/roadmap.md` (same date); the prompt inventory below remains a roadmap-derived historical guide and has not been fully reconciled with implementation completed since then. A prompt is guidance, not approval: backend prompts still stop at the ADR gate, and no prompt authorizes pulling work from a later phase. If the roadmap or a gate changes, change the prompt in the same edit. For current delivery order and verified status, use `docs/project/V1_DELIVERY_PLAN.md` (reconciled 2026-10-25) and `docs/project/project-status.md`. This audit does not modify the protected roadmap or treat backend-reported build status as target-environment verification.
 
 ---
 

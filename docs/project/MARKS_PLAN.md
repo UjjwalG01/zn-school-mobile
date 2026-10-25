@@ -10,9 +10,9 @@ access: Read
 
 **Approved by the owner on 2026-10-22, with the answers in §11 (M-D1: send the result version on every save). Build
 started the same day; the progress is in §12 and the evidence log.** The plan was drafted first as written below; where
-the build differs, §7 and §12 say so. Marks entry is the next planned teacher feature (roadmap
-§4, `PHASE_PROMPTS.md` M2 task 5, `V1_DELIVERY_PLAN.md` Phase 2) and the Academic tab's "Coming soon" row. Owner
-decision D5 of `TEACHER_APP_PLAN.md` made it a separate run, and this file is the first step of that run.
+the build differs, §7 and §12 say so. Marks entry is implemented and is no longer the next unstarted teacher feature;
+its remaining gate is the owner's test-stack/Android walkthrough. Owner decision D5 of `TEACHER_APP_PLAN.md` made it a
+separate run, and this file records that run.
 
 **Evidence level of the contract check (§3): Static when drafted, Reproduced on the test stack on 2026-10-22 (§3.3,
 E-M2).** The draft was read from the backend repo's code and `docs/api/ENDPOINTS.md`. The live run found two small
@@ -25,9 +25,7 @@ yet run on a phone:** the owner will test on their own Android phone and will no
 2026-10-22); the assistant started no emulator. The test stack for that run is described in
 `TEACHER_APP_PLAN.md` §6.2.
 
-**Owner constraints that apply:** no code in the web/API repo (a need there is a backend ask, §9); nothing is committed;
-no ADR is accepted by this work; the decisions in §11 are **Proposed** until the owner answers them. This plan does not
-publish or lock results, and it adds no dependency.
+**Owner constraints that apply:** no code in the web/API repo (a need there is a backend ask, §9); the 2026-10-25 grouped-commit request supersedes the earlier wait-for-phone-run commit hold, but commits still require repository checks and review; no ADR is accepted by this work. The decisions in §11 are recorded as answered by the owner. This plan does not publish or lock results, and it adds no dependency.
 
 **Changed 2026-10-23 (owner request):** the first screen of Marks entry is now a **filter page** (exam session → class → section → subject, then
 Open), shared with Exam attendance (`CALENDAR_AND_EXAM_ATTENDANCE_PLAN.md` §5, decision CE-D10), instead of a list of exam cards. §5 below still

@@ -8,9 +8,10 @@ access: Read
 
 ## Status
 
-**Built and unit-tested on 2026-10-23; not run on a phone; nothing committed.** Asked by the owner on 2026-10-23 in one brief (calendar, exam
+**Built and unit-tested on 2026-10-23; not run on a phone.** Asked by the owner on 2026-10-23 in one brief (calendar, exam
 attendance, migration `0239`, RBAC, security review, both repositories) and two mid-run additions: cards that open **filter pages** like the web
-(marks entry first) and a **language switch in Profile**. The backend half (the exam list route, the roster's `sectionId`, the effective-permissions
+(marks entry first) and a **language switch in Profile**. The owner's 2026-10-25 request supersedes the earlier commit hold; repository checks
+passed (lint with one existing warning, typecheck, 86 suites / 803 tests) and grouped commits remain pending. The backend half (the exam list route, the roster's `sectionId`, the effective-permissions
 endpoint, the security review and its findings) is in the web repository's `docs/project/project-status.md`, last section.
 
 ---

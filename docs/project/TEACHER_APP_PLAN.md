@@ -66,7 +66,7 @@ physical device); they are reported as pending, never as passed, until evidence 
 | D9  | Phase 1 database checks: `zn_school_test` read-only only; dev SQL given to the owner                                                                                                                                            | Owner, 2026-10-21     |
 | D10 | The app is tested on the owner's own Android phone; **no emulator is used or started.** Everything that needs the app on a screen waits for that run; API-side checks run over HTTP against a test stack                       | Owner, 2026-10-22     |
 | D11 | The owner reports the cause of the original "new teacher cannot access the app" as **the role** (H4). A default Teacher role is needed in the web/API project; it is requested, not built from this repo (D1)                    | Owner, 2026-10-22     |
-| D12 | **Exception to D1:** on "accept the recommendation and start implementation" (2026-10-22) the default Teacher role was added in the web/API project (migration `0236`, role `default_teacher`; applied to the test databases only, not to development). Nothing else in that project was changed. D1 otherwise stands | Owner, 2026-10-22     |
+| D12 | **Exception to D1:** on "accept the recommendation and start implementation" (2026-10-22) the default Teacher role was added in the web/API project (migration `0236`, role `default_teacher`); migration `0239` later added Calendar/Exam Attendance permissions. The mobile status records those applications as historical; current target-environment state remains to be confirmed. D1 otherwise stands | Owner, 2026-10-22     |
 
 ---
 
@@ -125,9 +125,7 @@ shows it (dev is the owner's to run; the test database result says nothing about
   `exam_result.save` (`src/auth/resolveShell.ts`, unit-tested). Any other staff role gives an empty shell list and the
   screen "Use the web app: your role in this school is not available in the mobile app" (`web-only`, **Static**, plus the
   live answer `{ all: false, keys: [] }` for a role with no permissions, **Reproduced**, E10).
-- The platform seeds two roles only, `tenant_admin` (194 permissions) and `guardian` (6); **no teacher role exists**
-  (**Reproduced** on a freshly migrated database, E10). Staff created on the web Staff page get no login and no role (§3.3),
-  so a new teacher either has no role or a role the school made by hand.
+- The historical E10 reproduction found only `tenant_admin` (194 permissions) and `guardian` (6) on that database; it did not represent the later `default_teacher` migration. Staff created on the web Staff page still get no login and no role (§3.3), so B11's atomic onboarding flow remains a separate deferred backend item.
 - A role made by hand does work: a custom role holding `attendance.mark`, `attendance.read`, `attendance.self`,
   `exam_result.save` and `exam_result.read` opened every teacher route (**Reproduced**, E10). A role that lacks
   `attendance.read` still gets the shell (it has `attendance.mark`) but its roster and settings calls are refused (403).
@@ -136,8 +134,7 @@ shows it (dev is the owner's to run; the test database result says nothing about
   exception D12): verified on a fresh database and through the API, applied to the test databases and, on 2026-10-22 at the
   owner's request, to the development database (up to 0236 only). B11 (onboarding) still decides how a teacher gets the role, a login and a
   staff link together; it is not started (Q2).
-- H1 stays open as a possible second cause for a school that has no valid license; the dev SQL (§3.6) is optional until
-  the role is fixed and the problem persists.
+- H1 remains a possible second cause for a school that has no valid license; the owner recorded the dev SQL (§3.6) as optional after naming the role as the original cause.
 
 ## 3.5 Phase 1 work in this repo
 
@@ -355,7 +352,7 @@ Status vocabulary as in `project-status.md`. A row changes only with evidence in
 | 1 | Read-only SQL on `zn_school_test` recorded; dev SQL handed over | Done 2026-10-21 (E2). The test database holds only e2e fixtures, so it says nothing about the failing school; the dev SQL is §3.6 and is the owner's to run |
 | 1 | Blocked screen names the license reason; blocked-school, unauthorized-school, switch tests green | Done 2026-10-21 (E3) |
 | 1 | B11 written in `BACKEND_PREREQUISITES.md` | Done 2026-10-21 (section 12 there) |
-| 1 | New teachers reach their school with correct permissions | **Pending owner.** The owner names the role as the cause (D11, §3.4 H4); the fix is a default Teacher role in the web/API project (B12, not yet approved or built). A hand-made custom role with five permissions already opens every teacher route (E10). H1 (license) is optional until the role is fixed |
+| 1 | New teachers reach their school with correct permissions | **Role implementation recorded as built:** the backend platform role `default_teacher` was added in migration `0236` and extended with Calendar/Exam Attendance permissions in `0239` (see dated status evidence in `project-status.md`). Current target-environment state and an end-to-end new-teacher phone walkthrough remain unverified. H1 (license) remains optional per the owner's recorded decision |
 | 2 | Five tabs from the registry, role-aware, Profile always visible, tabs rebuilt on school switch | Built and unit-tested 2026-10-21 (E5). Not run on a device |
 | 3 | Dashboard, Attendance (two subtabs), Academic hub, More, Profile built on existing APIs | Built and unit-tested 2026-10-21 (E5). Not run against the test stack or on a device; the live shape of the self-attendance record is unconfirmed (§11.3) |
 | 4 | `pnpm verify` green; Android bundle exports; docs updated | Done 2026-10-21 (E5; docs listed in §11.1) |
@@ -363,7 +360,7 @@ Status vocabulary as in `project-status.md`. A row changes only with evidence in
 | 4 | `impeccable` and `ponytail-review` run on the UI diff (mobile rule `mobile-frontend.md` §9) | Run 2026-10-21 (E6), in one context and from code only (no device). One defect fixed; the other findings are in §11.6 and **await the owner's choice**. `ui-ux-pro-max` was not run (not available here) |
 | 4 | Review fixes the owner chose ("top fixes", shortcut row removed): Dashboard cut, flat "Coming soon" rows, chevron on tappable cards, filled active-tab icon, headers follow the dark scheme, "Classes" label | Built and unit-tested 2026-10-21 (E7). Not seen on a device |
 | 4 | Rest of the review findings (round 2): compact month list, Sign out confirm, no license on Profile, stepper icons, no repeated titles, pinned subtab control, `key` removed, `StatTile` local | Built and unit-tested 2026-10-21 (E8). Not seen on a device; the month stepper's lower bound is not built (§11.6) |
-| 4 | Physical-device run (§6.1, §6.2) | **Pending the owner's phone run** (no emulator, D10). Stack and accounts ready; nothing has been seen on a screen |
+| 4 | Physical-device run (§6.1, §6.2) | **Pending the owner's phone run** (no emulator, D10). A historical stack/account snapshot exists; confirm the current test-stack URL, account readiness and app configuration immediately before running. No phone-screen evidence is recorded. |
 
 ---
 
@@ -526,13 +523,13 @@ unless a 403 refreshes them.
 
 ---
 
-# 11. Build record and what remains (updated 2026-10-21)
+# 11. Build record and what remains (updated 2026-10-25)
 
-Phases 0 to 3 are built in this repo, and Phase 4's code checks ran (E5). Nothing is committed: a peer session,
-`zn-school-mobile-a4`, left about 70 uncommitted files here; do not commit, do not revert, read a file with the Read
-tool before editing it. The web/API repo has no edits and must stay that way (owner rule D1).
+Phases 0 to 3 are built in this repo, and Phase 4's code checks ran (E5). The owner explicitly authorized grouped commits
+on 2026-10-25; this plan no longer prohibits committing, but repository checks and review remain required. The web/API repo
+has no edits and must stay that way (owner rule D1).
 
-## 11.1 What was built (all uncommitted)
+## 11.1 What was built
 
 | Piece | Files |
 | --- | --- |
@@ -571,12 +568,12 @@ tool before editing it. The web/API repo has no edits and must stay that way (ow
   `mobile-frontend.md` §9). `ponytail-review` and `impeccable critique` were run (E6, findings in §11.6). The
   `impeccable` run was single-context and code-only; a run from a session opened in this repo, on a device build,
   is still the proper finish. The Dashboard redesign was out of scope by decision.
-- The look of every new screen is unseen: no device, no emulator. Tab bar colours come from tokens; the navigation
-  headers are still the default light ones (no theme provider exists, pre-existing).
-- **Live shape of `GET /attendance/staff/self`**: the record fields (`attendanceDate`, `status`, `source`, `version`) and
-  `todayDay` are read from the backend service code, not from a live response; confirm on the test stack.
+- The look of every new screen remains unverified on a device: no emulator is used. Tab bar colours, headers, Dark mode,
+  dropdown placement, font scale and low-end scrolling must be checked in the owner's Android run.
+- **Historical live shape of `GET /attendance/staff/self`**: record fields (`attendanceDate`, `status`, `source`, `version`)
+  and `todayDay` were confirmed over HTTP on 2026-10-22 (E9); recheck on the current target stack during the owner run if the environment differs.
 - The phone's own date is used only for Home's date line and `my-classes`; My Attendance shows the school's `today`.
-- The `roadmap.md` M2 checkbox for the shell stays unchecked until the device run (§6.1).
+- The protected `roadmap.md` M2 checkbox for the shell stays unchecked until the device run (§6.1).
 - The Nepali strings added here are drafts and need native review.
 
 ## 11.4 Gotchas found
@@ -608,7 +605,7 @@ ponytail row (shortcuts), impeccable rows 1 to 5. **Round 2, the owner's request
 rows 6 and 7 (compact month list with a counts line; Sign out asks first and is a quiet link; no license dates on
 Profile) and the row-8 items the owner named (chevron icons on the stepper, no repeated in-body titles on Profile and
 More, the Attendance subtab control pinned above the scrolling area), plus the two ponytail rows (`key={tenantId}` removed,
-`StatTile` made local to `HomeScreen`). **Not built:** the month stepper still has no lower bound (row 8, `canGoBack`
+`StatTile` made local to `HomeScreen`). **Open:** the month stepper still has no lower bound (row 8, `canGoBack`
 is always true); it needs a rule from the backend (license start or school year), so it stays a note. The wording below
 is the report as written.
 

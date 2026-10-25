@@ -208,4 +208,95 @@ plain `View`s: a chart library or an SVG module would be a new dependency (CLAUD
 - Do not read `.value` straight inside a `style` prop (destructure first): Reanimated's Babel plugin takes it for a shared value
   and injects a require of Reanimated, which fails under Jest and loads the library at runtime.
 Used on the teacher Dashboard: marks entry progress (`StackedBar`) and subjects by class (`BarChart`), both from the reads the
-screen already makes (no extra request).
+screen already makes (no extra request), and My Attendance This Month (`StackedBar` of the caller's own records by status), which is
+the one extra request of the Dashboard (`GET /attendance/staff/self`, the read My Attendance already makes, so the two share one
+cache entry).
+
+---
+
+# 9. Light and dark mode
+
+Requirements (collected 2026-10-23 from the brief, `.claude/rules/mobile-frontend.md` §6 and the code as it stood). Built and
+unit-tested; **not yet seen on a device**.
+
+| # | Requirement | How it is met |
+| --- | --- | --- |
+| T1 | Three choices: **Auto** (follow the device, the default), **Light**, **Dark** | `ThemePreference` in `src/theme/themePreference.ts`; the control is `ThemeSwitch` (a `SegmentedControl`) on the **Profile** tab, under Language |
+| T2 | The choice is remembered on the device and read before the first screen, so the app never opens in one scheme and flips | AsyncStorage key `zn-theme` (a device preference: not secret, not part of the account or the school); `app/_layout.tsx` waits for it together with the language |
+| T3 | Sign-out and school switch keep it | it is not under a tenant key and logout does not wipe it (same rule as the language) |
+| T4 | It applies at once, with no re-mount and no "unsaved work" question | `Appearance.setColorScheme` changes `useColorScheme`, so every screen re-renders from `useTheme`; nothing in memory is dropped (unlike the language) |
+| T5 | Native chrome follows the choice (alerts, keyboard, pickers), not only our views | the same `Appearance.setColorScheme` call; `'unspecified'` hands the decision back to the device for Auto |
+| T6 | One source of colour: no literal colour in a component, both palettes define every token | `src/theme/tokens.ts`; `tokens.test.ts` fails if the palettes differ in keys or a value is not hex |
+| T7 | Text contrast: body text 4.5:1, large text and controls 3:1, in both palettes | measured below |
+| T8 | State is never colour alone (selected, disabled, error, unread, status) | unchanged rule; the unread dot in the inbox is also in the row's accessible name; chart states carry a label and a count |
+| T9 | The status bar icons stay light in both schemes | every screen starts with the brand-coloured header (`StatusBar style="light"`, root layout) |
+| T10 | Shadows and scrims come from the palette | a shadow uses `colors.text`, a scrim the text colour at low opacity; in Dark the hairline border carries the edge, because a shadow barely shows |
+| T11 | The mobile-only dark palette is reviewed whenever the web palette changes | the note at the top of `tokens.ts`; still open: the web has no dark palette to mirror |
+
+**Contrast, measured** (WCAG ratio from the hex values, 2026-10-23). Dark passes everything it needs. Light passes everything except two
+pairs at 4.47:1 instead of 4.5:1, both because the light palette mirrors the web's: muted text on the page background (`#6b7280` on
+`#f5f6f8`) and destructive text on the page background (`#dc2626` on `#f5f6f8`). Both pass on a card (4.83:1). They are left as they
+are, because the light palette is the web's (§1) and is changed in the web project first; with the smaller type of §10 it is the one
+place to look if AA is required at the smallest size.
+
+**Checks that need a phone** (decision D10, the owner runs them): every screen in Light and in Dark; switching while a screen is open
+(the Dashboard charts, the marks table, a dropdown); a restart restores the choice; with Auto, changing the device scheme changes the
+app; the notification badge, the unread dot, tinted cards and the `DateBadge` are readable in Dark.
+
+**Not built (not asked):** a schedule (dark at night), a per-school theme, a high-contrast palette.
+
+---
+
+# 10. App-shell spacing and type scale
+
+**One inset for page content.** `gutter` (`spacing.lg`, 16) in `src/theme/tokens.ts` is the horizontal inset of every page, applied
+once by `Screen` and `ListScreen` (and the `ListScreen` footer); the page header bar and the Attendance subtab control use the same
+value. Above and below, a page gets `spacing.lg` from the same two components. The safe area is handled by the shared components
+too: `CurvedHeader` clears the status bar and the screens clear the bottom. **A page adds no margin or padding of its own at its
+edges**; it composes cards and rows inside the shell. A distinct layout (a sheet, an overlay, `AuthScreen`) sets its own and says so
+in its file. The `padding` shorthand is not in this React Native version's style types, so a component writes `paddingHorizontal` and
+`paddingVertical`; dropping one of the two silently removes that inset (it happened once: the sides of every page went to zero).
+`layoutInsets.test.tsx` guards it.
+
+**Type scale** (points; text still scales with the system font setting up to 1.3×):
+
+| Token | Size / line | Used for |
+| --- | --- | --- |
+| `caption` | 11 / 15 | hints, table headers, tab labels, badges |
+| `body` | 13 / 18 | running text |
+| `bodyLarge` | 14 / 20 | row titles, fields, buttons |
+| `title` | 17 / 23 | section and page titles |
+| `headline` | 21 / 27 | the Dashboard greeting and tile numbers |
+
+**Icons** come from `iconSize` (`sm` 16, `md` 18, `lg` 22), never a number in a component. Tab and header icons are `lg`; chevrons
+and the dropdown arrow are `md`. **Controls** (buttons, fields, rows, tabs) are drawn smaller but keep a hit area of
+`MIN_TOUCH_TARGET` (44), so a small glyph never makes a small target. The primary button and the fields are 44 high (they were 52).
+
+---
+
+# 11. Dropdown, notification bell and marks table
+
+**`SelectField` is an anchored dropdown.** The list opens right under the field, as wide as the field, and opens over it when there
+is more room above (`placeDropdown` in `src/components/dropdownPlacement.ts`, pure and tested). It is a core `Modal` with an
+absolutely placed list: no new dependency, and the modal gives the dismissal (tap outside, Android back) and keeps the list above
+every screen. The old version was a bottom sheet because that is all a bare `Modal` gave. The field is measured on each open
+(`measureInWindow`) and the list is held inside the usable screen (status bar and navigation bar insets), shrinking and scrolling
+rather than overflowing. Kept: radio rows of at least 44, a check and bold for the chosen one, a "Close" button for screen readers
+(the area outside the list), the label and the disabled hint. Every filter page gets it through this one component. **Only a device
+shows** whether `measureInWindow` and the `statusBarTranslucent` modal line up on the owner's Android version; if they are off by
+the status bar height, that is the single place to look.
+
+**Notification bell.** `NotificationBell` is the last thing on the page header of the teacher shell (`teacherHeaderOptions` =
+`shellHeaderOptions(<NotificationBell/>)`, spread by the tab navigator and by every nested stack), so it is in the same place on every
+screen and no screen draws its own. It shows the unread count from the one inbox query the list screen shares. A page outside the
+shell (sign-in, the school picker) uses `BrandHeader` / `brandHeaderOptions` and has no bell.
+
+**Marks entry table.** One line per student: roll number, name (two lines at most), one box per column, sorted by roll number
+(numeric, no roll last). The exam, class, subject and session are said once, in the summary card above; the column titles and their
+maximum ("Theory / 80") are a header that stays on screen while the rows scroll. What needs saying about a student (a mark out of
+range, a missing mark, a conflict, a refusal) is added under that line, so a clean row stays one line. Up to three columns share the
+line on a 360pt phone; more wrap under the name. `MarkCell`, `MarksRow` and `MarksTableHeader` are in
+`src/features/teacher/marks/components`; `MarkCell` is a bare input because `TextField` stacks a label above and a message below,
+which cannot be a table cell. Theory and Practical are separate columns **only when the backend says which component is which**
+(`componentType`, request B18, not sent yet); until then each component is a column under its own name. A subject without a
+practical component shows a disabled Practical box, which is never sent.
