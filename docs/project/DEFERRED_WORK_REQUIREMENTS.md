@@ -36,6 +36,8 @@ owner-requested backend ADR before code; item 3 needs the owner's B11-1…B11-6 
 | 2. Row-level security on roles | backend (and test helpers) | **yes**, amending ADR-0033 D8  | the ADR itself (accept, then build)  | the ADR draft yes; code after acceptance      | L    |
 | 3. B11 onboarding              | backend and web            | **yes**                        | scope and rules (§3.2)               | the ADR draft yes; code after acceptance      | L    |
 
+**Backend plan (2026-10-29).** Items 2 to 4 and the other open backend requests (B11, B13 to B15, B17 to B21) are now planned in the web/API repository, phase by phase, with their ADR drafts, tests and gates; see §5. The owner accepted B11-1…B11-6 as recommended and chose new `exam_result.read_any` / `attendance.read_any` keys for the read-scoping asks. Phases 1 to 3 are built there (2026-10-29; the dev API container is not yet rebuilt); phases 4 to 6 are planned.
+
 The three are independent of each other. None of them blocks the marks phone run. Item 1 should land before Guardian V1
 step G1, because a revoked guardian relies on it.
 
@@ -234,3 +236,26 @@ contract; the activation screen for staff stays on the web.
 2. Implement item 1 (plain-403 school-cache wipe) in the mobile repo; V-D3 has already answered the decision and it should land before Guardian V1 G1.
 3. Ask for the two backend ADR drafts (items 2 and 3) when ready; they can be written in parallel and accepted separately. Item 3 also needs B11-1…B11-6 answered before implementation.
 4. Guardian V1 G0/G1 only after the phone run / Phase 2 gate (`GUARDIAN_V1_PLAN.md`), preferably after item 1.
+
+---
+
+# 5. Backend implementation plan (web/API repository)
+
+Written 2026-10-29 at the owner's request. The backend design, phases, tests, ADR drafts and gates live in the web/API repository and are **not copied here** (that repository is the authority for backend design, and a copy would drift):
+
+`zn-school-platform-v1/docs/project/implementation-plan/mobile-deferred-backend-implementation-plan.md` (companion: `mobile-deferred-backend-protected-doc-proposals.md`, same folder).
+
+| Phase | Mobile ask | Backend ADR (provisional, Proposed once drafted) | State |
+| --- | --- | --- | --- |
+| 1 | B14-B, B17 F-1/F-2: scope exam-result, exam-roster and attendance-report reads by assignment, with new keys `exam_result.read_any` and `attendance.read_any` | 0077 | ADR Accepted 2026-10-29; **built 2026-10-29** (migration `0248` on the test and dev database; the dev API container is not yet rebuilt) |
+| 2 | B14-A (`isOptional`, `includeInResults`), B14-C (stable code), B18 (`componentType`), **B21** (`GET /portal/teacher/exam-routines`, item 4 above) | 0078 | ADR Accepted 2026-10-29; **built 2026-10-29** (no schema; not yet deployed to the dev API container) |
+| 3 | B19 (holiday notifications), B20 (`referenceDate` on a notification) | 0078 | ADR Accepted 2026-10-29; **built 2026-10-29** (migration 0249 on the test and development databases; the dev API image is not rebuilt) |
+| 4 | Item 2 / B13: row-level security on roles | 0079 | Planned; ADR first |
+| 5 | Item 3 / B11: atomic staff onboarding (`POST /staff/onboard`) | 0080 | Planned; ADR first |
+| 6 | B15: guardian PDFs, guardian advance pool, school currency, attendance labels for guardians | 0081 | Planned; gated on the teacher phone run |
+
+**Owner decisions recorded 2026-10-29.** B11-1…B11-6 accepted as recommended (§3.2). Read scoping uses new keys copied by migration to every current holder of the matching read key except the platform role `default_teacher`. The plan covers all four tracks. B9 (read replica) stays not built.
+
+**What changes for the app, when each phase lands (phases 1 to 3 are built in the backend, but the dev API container is not yet rebuilt, so the app sees none of it yet):** `componentType`, `isOptional`, `includeInResults` and a stable `code` on marks failures arrive as added fields; `GET /portal/notifications` gains `referenceDate` and a holiday notification `type` (the bell must tolerate an unknown type); `GET /portal/teacher/exam-routines` appears for a future routine screen; teachers with the default role see only their own classes on the web-open reads (the phone already calls only scoped routes). `API_CONTRACT.md` is synced by hand in the same phase as each endpoint. Building these mobile pieces needs its own go-ahead.
+
+**Rule unchanged.** No backend code is written from this repository (D1). The plan and proposals files were written in the web/API repository at the owner's request.

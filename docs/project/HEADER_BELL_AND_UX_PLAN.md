@@ -58,9 +58,9 @@ what it would need is `BACKEND_PREREQUISITES.md` §18 (B18 to B20, proposed).
 | --- | --- |
 | Is there an inbox the app can read? | Yes: `GET /portal/notifications` (own rows, `unread` count) and `POST /portal/notifications/:id/read`; membership only |
 | Which changes create an inbox row? | `SchoolEventPublished` when an event is **created** and its type has `notify` (an edit tells nobody); `NoticePublished`; `LeaveSubmitted`, `LeaveDecided`; guardian-only `StudentMarkedAbsent`, `ResultsPublished` |
-| Do holidays? | **No.** `calendar-events.contract.ts` holds only `SchoolEventPublished`; the holiday code appends no event. A holiday shows in `GET /calendar` and notifies nobody (B19) |
+| Do holidays? | **No, as of 2026-10-23.** `calendar-events.contract.ts` holds only `SchoolEventPublished`; the holiday code appended no event. *2026-10-29: the backend now raises `HolidayChanged` (`settings/holiday-events.contract.ts`) and adds `holiday_changed` rows; built, not yet deployed (B19).* |
 | Is visibility on the server? | Yes: the fan-out picks recipients by audience, staff type and class assignment from the payload, and each recipient must hold the key that opens the item. The inbox read is by `user_id` and `tenant_id` (RLS on `notifications`) |
-| What does a row carry? | `{ id, type, referenceId, title, readAt, createdAt }`; no date for an event (B20) |
+| What does a row carry? | `{ id, type, referenceId, title, readAt, createdAt }`; no date for an event (B20). *2026-10-29: `referenceDate` added (built, not yet deployed); the app ignores it until it is deployed.* |
 | Does the route that lists components say Theory / Practical? | **No.** The database has `exam_components.component_type`; the route sends `{ id, name, maxMarks }` (B18). Verified on the test API |
 | Which read feeds the attendance chart? | `GET /attendance/staff/self` (own records for a month; the server decides who) |
 
@@ -112,7 +112,7 @@ what it would need is `BACKEND_PREREQUISITES.md` §18 (B18 to B20, proposed).
 | Area | Completion requirement | Evidence |
 | --- | --- | --- |
 | Notifications | Header bell, unread count, authorized list and supported targets | 13 unit tests (list, tap, read patch, failure, empty, retry, shared query = 1 request) + 2 manifest + 1 More hub; **phone: not run** |
-| Calendar context | Events and holidays reuse the school's data and audience rules | The app lists what the backend put in the inbox. Event and notice rows work; **holidays create no row (B19)** |
+| Calendar context | Events and holidays reuse the school's data and audience rules | The app lists what the backend put in the inbox. Event and notice rows work; **holidays create no row (B19)** until the backend built on 2026-10-29 is deployed. Checked in this repository on 2026-10-29 (static, plus the existing `notificationsModel.test.ts` case): a new `type` such as `holiday_changed` lists with the generic label and no destination, and a tap only marks it read |
 | Attendance chart | Right data, one bounded request, nothing unauthorized | 6 Home tests: one `GET /attendance/staff/self` with no month; shared with My Attendance; hidden for 404 / 403 / no key; HTTP checks below |
 | Marks entry | One line per student, roll order, Theory / Practical, practical applicability | 8 `markColumns` tests; 6 table tests (roll order, header, unsaved, lock, typed order, disabled box never sent). **Applicability needs B18**; untyped it is one column per component |
 | Dropdown | Next to the field when supported | 5 `placeDropdown` tests + the 6 existing `SelectField` tests; **placement on the owner's Android version: not seen** |

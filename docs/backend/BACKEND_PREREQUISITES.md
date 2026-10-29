@@ -21,6 +21,11 @@ carry the current state; sections 1 to 10 keep their original wording as the rec
 since: B12 (built), B13 to B15 (open), sections 13 to 16. ADR numbers in the text above predate the backend's ADR-0064 to
 ADR-0073.
 
+**Implementation plan 2026-10-29.** The open requests (B11, B13 to B15, B17 to B21) are planned phase by phase in the backend repo:
+`docs/project/implementation-plan/mobile-deferred-backend-implementation-plan.md` (ADR-0077 **Accepted 2026-10-29**; ADR-0078 **Accepted 2026-10-29**, covering B14-A, B14-C, B18, B19, B20 and B21 with the field name `errorCode`, a holiday push, and `exam_result.read_any` lifting the routine's class limit (**Phase 2 built 2026-10-29**: B14-A, B14-C, B18, B21; Phase 3, B19 and B20, **built 2026-10-29**); ADR drafts 0079 to 0081 to follow, all Proposed). Owner decisions recorded
+the same day: B11-1…B11-6 accepted as recommended; read scoping (B14-B, B17) uses new keys `exam_result.read_any` and `attendance.read_any`. Phases 1 to 3 are built in the backend (the dev API container is not yet rebuilt); the
+rows below say **Planned** or **built** with the phase. The plan is not copied here.
+
 All paths are relative to `apps/api/src/` in the backend repo unless stated. Section _N_ below is
 referred to as **B*N*** in the roadmap and status docs. Work is grouped into packages **WP-1…WP-7**
 (`docs/project/roadmap.md` §2); copy-paste prompts are in `docs/project/PHASE_PROMPTS.md`.
@@ -37,11 +42,15 @@ referred to as **B*N*** in the roadmap and status docs. Work is grouped into pac
 | B8 guardian result visibility              | WP-5                        | Built: released results only (`/portal/guardian/students/:id/results`); not exercised with data |
 | B9 `READ_DB` seam                          | WP-6                        | Not built                                                               |
 | B10 notices, push, SMS/email               | WP-7                        | Notices, inbox, devices and Expo push built on the backend (ADR-0069, Phase 6; migration 0231 on the test and development databases); SMS/email not built |
-| B11 teacher onboarding                     | —                           | Requested 2026-10-21 (Proposed, no ADR). Section 12. Found by the teacher-access audit in `docs/project/TEACHER_APP_PLAN.md`. The role part is solved by B12; what remains is one atomic flow. What it needs to start: `docs/project/DEFERRED_WORK_REQUIREMENTS.md` §3 |
+| B11 teacher onboarding                     | —                           | Requested 2026-10-21 (Proposed, no ADR). Section 12. Found by the teacher-access audit in `docs/project/TEACHER_APP_PLAN.md`. The role part is solved by B12; what remains is one atomic flow. What it needs to start: `docs/project/DEFERRED_WORK_REQUIREMENTS.md` §3. **Planned 2026-10-29** (backend plan Phase 5, ADR-0080 to be drafted; B11-1…B11-6 accepted) |
 | B12 default Teacher role                   | —                           | **Built 2026-10-22** as the platform role `default_teacher` (backend migration 0236). Section 13 |
-| B13 row-level security on roles            | —                           | Requested 2026-10-22 (Proposed, needs a new ADR amending ADR-0033 D8). Section 14. What it needs: `DEFERRED_WORK_REQUIREMENTS.md` §2 |
-| B14 marks portal asks A, B, C              | —                           | Requested 2026-10-22 (Proposed). Section 15; ask B is a Reproduced exposure |
-| B15 guardian portal gaps                   | —                           | Requested 2026-10-22 (Proposed, none blocks Guardian V1 steps G0 to G3). Section 16 |
+| B13 row-level security on roles            | —                           | Requested 2026-10-22 (Proposed, needs a new ADR amending ADR-0033 D8). Section 14. What it needs: `DEFERRED_WORK_REQUIREMENTS.md` §2. **Planned 2026-10-29** (backend plan Phase 4, ADR-0079 to be drafted) |
+| B14 marks portal asks A, B, C              | —                           | Requested 2026-10-22 (Proposed). Section 15; ask B is a Reproduced exposure. **Planned 2026-10-29**: B in backend plan Phase 1 (ADR-0077), A and C in Phase 2 (ADR-0078). **Built 2026-10-29 on the test database, not yet deployed to the dev API container:** B (Phase 1), A and C (Phase 2: `isOptional`, `includeInResults`, and an optional `errorCode` on bulk failures plus nine `MARKS_*` codes) |
+| B15 guardian portal gaps                   | —                           | Requested 2026-10-22 (Proposed, none blocks Guardian V1 steps G0 to G3). Section 16. **Planned 2026-10-29** (backend plan Phase 6, gated on the teacher phone run; ADR-0081 drafted at that point) |
+| B17 read scoping                           | —                           | Requested 2026-10-23 (Section 17). **Planned 2026-10-29** with the same Phase 1 as B14-B (ADR-0077); new keys `exam_result.read_any`, `attendance.read_any` |
+| B18 `componentType`                        | —                           | Requested 2026-10-23 (Section 18). **Planned 2026-10-29** (backend plan Phase 2, ADR-0078). **Built 2026-10-29, not yet deployed:** `componentType` on each component of `GET /portal/teacher/exams` |
+| B19 holiday notifications, B20 event date  | —                           | Requested 2026-10-23 (Section 18). **Backend built 2026-10-29** (backend plan Phase 3, ADR-0078; migration 0249 on the test and development databases; the dev API image is not rebuilt, so dev does not serve it yet) |
+| B21 teacher exam routine                   | —                           | Drafted 2026-10-26 (Section 19). **Planned 2026-10-29** (backend plan Phase 2, ADR-0078). **Built 2026-10-29, not yet deployed:** `GET /portal/teacher/exam-routines`; the contract is in `API_CONTRACT.md` §2; no screen is built |
 
 ---
 
@@ -481,20 +490,37 @@ setup reads are membership-only. All three are reproduced in the backend reposit
 cases F-1 to F-4). The phone calls only the scoped portal routes for names and rosters, so the app's own screens are not affected; the marks
 screen's results call is the one place it touches F-1.
 
+**Decision 2026-10-29 (owner).** F-1 and F-2 (and B14-B) are closed by new keys `exam_result.read_any` and `attendance.read_any`, copied by one migration to every
+current holder of the matching read key except the platform role `default_teacher`, so a caller without the key sees only the classes they are assigned to.
+Scope is by student, not by subject: an in-scope student still returns every subject's components (the marks re-apply after a 409 needs them). F-3 and F-4 stay deferred.
+Planned in backend plan Phase 1 (ADR-0077, **Accepted 2026-10-29**); not built. Decided with it: an unfiltered attendance report returns the caller's own classes (a named out-of-scope class is a 403), and an out-of-scope single read is a 403. Lists get shorter for a default teacher; response shapes do not change.
+
 ---
 
 # 18. Header bell, marks table and dashboard chart — requests B18 to B20 (2026-10-23), proposed
 
 **Status: proposed, nothing built, nothing changed in the web/API repository.** They come from the owner's brief of 2026-10-23 (notification bell,
 "My Attendance This Month", Theory/Practical marks table); the app work is in `docs/project/HEADER_BELL_AND_UX_PLAN.md`. Each is small and
-additive, and the app works without it (the fallback is in the third column).
+additive, and the app works without it (the fallback is in the third column). **Planned 2026-10-29** in the backend plan: B18 in Phase 2, B19 and B20 in Phase 3 (ADR-0078); the bell must tolerate a new notification `type` for holidays.
 
 | Item | What the app needs | Without it |
 | --- | --- | --- |
 | **B18** | `GET /portal/teacher/exams` sends `componentType` (`theory`, `practical`, `cas`, `internal`, `project`, `viva`, `other`) with each component: `components: [{ id, name, maxMarks, componentType }]`. The value is already in `exam_components.component_type` (migration `0113`, `NOT NULL`) and the route already reads that table (`exam-result.service.ts`, the `.map(({ id, name, maxMarks }) => …)` near line 888 drops it). Evidence: on the mobile test API the Mathematics components are `[{"id":…,"name":"Theory","maxMarks":"80.00"},{"id":…,"name":"Practical","maxMarks":"20.00"}]` | The marks table has one column per component under its own name. It cannot tell Theory from Practical, so it cannot show a disabled Practical box for a subject that has none, and it will not guess from the name (the brief forbids inferring applicability) |
-| **B19** | Holiday create / change / deactivate raises an outbox event the Communication fan-out turns into inbox rows for the staff (and guardians) the holiday applies to (its audience is already on the holiday). Today the only calendar event is `SchoolEventPublished` (`calendar-events.contract.ts`); there is no holiday contract, so a holiday appears in `GET /calendar` and notifies nobody | Teachers see a new holiday only by opening the Academic Calendar. The bell shows events, notices, leave and (for guardians) absences and results |
-| **B20** (optional) | A `school_event` notification row carries the event's `startDate` (a new `date` column, or the title is left as it is and the date added to the row), so a tap can open that day. Today a row is `{ id, type, referenceId, title, readAt, createdAt }` and `referenceId` is the event id; `GET /calendar` has no get-by-id route for a non-manager | A tap opens the Academic Calendar at today. The event is in its Upcoming list when it is within 60 days |
+| **B19** (built 2026-10-29, not deployed: `HolidayChanged`, notification type `holiday_changed`) | Holiday create / change / deactivate raises an outbox event the Communication fan-out turns into inbox rows for the staff (and guardians) the holiday applies to (its audience is already on the holiday). Today the only calendar event is `SchoolEventPublished` (`calendar-events.contract.ts`); there is no holiday contract, so a holiday appears in `GET /calendar` and notifies nobody | Teachers see a new holiday only by opening the Academic Calendar. The bell shows events, notices, leave and (for guardians) absences and results |
+| **B20** (built 2026-10-29, not deployed: `notifications.reference_date`, `referenceDate` on each row, backfilled for event rows) | A `school_event` notification row carries the event's `startDate` (a new `date` column, or the title is left as it is and the date added to the row), so a tap can open that day. Today a row is `{ id, type, referenceId, title, readAt, createdAt }` and `referenceId` is the event id; `GET /calendar` has no get-by-id route for a non-manager | A tap opens the Academic Calendar at today. The event is in its Upcoming list when it is within 60 days |
 
 **Checked, not requested.** `POST /portal/notifications/:id/read` answers 404 for another person's id and for an unknown id, 403
 `TENANT_MEMBERSHIP_NOT_FOUND` for a school the caller does not belong to, and `GET /attendance/staff/self` ignores a `staffMemberId` or
 `userId` in the query. They were reproduced over HTTP on the mobile test API on 2026-10-23 (27 checks, `HEADER_BELL_AND_UX_PLAN.md` §6).
+
+---
+
+# 19. Teacher exam routine: request B21 (2026-10-26), planned
+
+**Status: the route is built in the backend (2026-10-29, Phase 2, ADR-0078; test database, not yet deployed to the dev API container); no mobile screen is built.** The routine screen on the phone waits for this route and for the owner's schedule for it (`V1_DELIVERY_PLAN.md` lists the exam routine as after v1; the backend can be ready earlier).
+
+**Request.** `GET /portal/teacher/exam-routines` (paged), tenant-scoped JSON rows: stable slot id, exam or session id and names, academic year, class and section, subject, ISO date, optional start and end time, room or venue, publication state. Query keys on the app side are tenant-prefixed (`[tenantId, 'exam-routine', filters]`) with the Reference-class stale time (6 h).
+
+**Scope and permission.** Assigned classes only. The draft names `exam_result.read`; the backend's existing teacher portal reads use an any-of permission, so the ADR decides the final key (open question C-2 in the backend plan). Published sessions only.
+
+**Mobile impact.** None until the screen is built. The structured data already exists in the backend (`exam_subjects` dates, times and rooms); only the route is missing.
