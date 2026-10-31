@@ -9,6 +9,8 @@ export interface ApiEvents {
   'school-suspended': undefined;
   /** The selected school's license blocks every tenant route. */
   'license-blocked': { errorCode: string; message: string };
+  /** A plain tenant-scoped 403; tenantId is bound to the originating request. */
+  forbidden: { tenantId: string };
 }
 
 type Listener<K extends keyof ApiEvents> = (payload: ApiEvents[K]) => void;
@@ -18,6 +20,7 @@ const listeners: { [K in keyof ApiEvents]: Set<Listener<K>> } = {
   'tenant-access-lost': new Set(),
   'school-suspended': new Set(),
   'license-blocked': new Set(),
+  forbidden: new Set(),
 };
 
 /** Subscribe; returns the unsubscribe function. */

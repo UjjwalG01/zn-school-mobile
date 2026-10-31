@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render } from '@testing-library/react-native';
 
 import { emitApiEvent } from '../../api/events';
+import { removePersistedTenantQueries } from '../../lib/queryClient';
 import { logout } from '../logout';
 import { mySchoolsKey } from '../queries';
 import { SessionEvents } from '../SessionEvents';
@@ -15,6 +16,11 @@ import {
 } from '../session';
 
 jest.mock('../logout', () => ({ logout: jest.fn() }));
+jest.mock('../../lib/queryClient', () => ({
+  removePersistedTenantQueries: jest.fn(async (queryClient: QueryClient, tenantId: string) => {
+    queryClient.removeQueries({ predicate: (query) => query.queryKey[0] === tenantId });
+  }),
+}));
 
 let client: QueryClient;
 let unmount: () => void = () => undefined;
@@ -102,6 +108,52 @@ describe('SessionEvents: school access', () => {
     await emit('license-blocked', { errorCode: 'LICENSE_EXPIRED', message: 'expired' });
     await emit('school-suspended', undefined);
     expect(getSession()).toMatchObject({ status: 'signed-out', blocked: null, blockedReason: null });
+  });
+
+  it('wipes only the selected tenant for a matching forbidden event', async () => {
+    startSession();
+    selectTenant('t1');
+    client.setQueryData(['t1', 'students'], [1]);
+    client.setQueryData(['t2', 'students'], [2]);
+    client.setQueryData(['_user', 'me'], { id: 'u1' });
+    await mount();
+
+    await emit('forbidden', { tenantId: 't1' });
+
+    expect(removePersistedTenantQueries).toHaveBeenCalledWith(client, 't1');
+    expect(client.getQueryData(['t1', 'students'])).toBeUndefined();
+    expect(client.getQueryData(['t2', 'students'])).toEqual([2]);
+    expect(client.getQueryData(['_user', 'me'])).toEqual({ id: 'u1' });
+    expect(getSession().tenantId).toBe('t1');
+  });
+
+  it('ignores stale, signed-out, and concurrent forbidden events', async () => {
+    startSession();
+    selectTenant('t2');
+    await mount();
+    let resolve!: () => void;
+    jest.mocked(removePersistedTenantQueries).mockImplementation(
+      () => new Promise<void>((done) => (resolve = done)),
+    );
+
+    await emit('forbidden', { tenantId: 't1' });
+    await act(async () => {
+      emitApiEvent('forbidden', { tenantId: 't2' });
+      emitApiEvent('forbidden', { tenantId: 't2' });
+    });
+    expect(removePersistedTenantQueries).toHaveBeenCalledTimes(1);
+    resolve();
+    await act(async () => Promise.resolve());
+    jest.mocked(removePersistedTenantQueries).mockResolvedValue(undefined);
+    selectTenant('t1');
+    selectTenant('t2');
+    await emit('forbidden', { tenantId: 't2' });
+
+    expect(removePersistedTenantQueries).toHaveBeenCalledWith(client, 't2');
+    expect(removePersistedTenantQueries).toHaveBeenCalledTimes(2);
+    endSession();
+    await emit('forbidden', { tenantId: 't2' });
+    expect(removePersistedTenantQueries).toHaveBeenCalledTimes(2);
   });
 
   it('an unauthorized event ends the session locally with the expiry notice', async () => {

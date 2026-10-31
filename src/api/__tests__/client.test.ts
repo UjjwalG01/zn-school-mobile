@@ -100,6 +100,76 @@ describe('api client', () => {
     expect(lostListener).toHaveBeenCalledTimes(1);
   });
 
+  it('emits a tenant-bound forbidden event only for eligible plain 403 responses', async () => {
+    const listener = jest.fn();
+    const off = onApiEvent('forbidden', listener);
+    const { adapter } = setup([
+      json(403, { errorCode: 'HTTP_FORBIDDEN', message: 'No access' }),
+      json(404, { errorCode: 'NOT_FOUND', message: 'Missing' }),
+    ]);
+
+    await apiGet('/portal/teacher/classes').catch(() => undefined);
+    await apiGet('/students/1').catch(() => undefined);
+    off();
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener).toHaveBeenCalledWith({ tenantId: 'tenant-1' });
+    expect(adapter.getTenantId()).toBe('tenant-1');
+  });
+
+  it('excludes special 403 codes and tenantless requests from forbidden events', async () => {
+    const listener = jest.fn();
+    const off = onApiEvent('forbidden', listener);
+    const specialCodes = [
+      'TENANT_MEMBERSHIP_NOT_FOUND',
+      'TENANT_ACCESS_DENIED',
+      'LICENSE_NOT_FOUND',
+      'LICENSE_SUSPENDED',
+      'LICENSE_EXPIRED',
+      'LICENSE_NOT_YET_VALID',
+      'ENTITLEMENT_DENIED',
+      'TENANT_AUDIENCE_DENIED',
+    ];
+    setup(specialCodes.map((errorCode) => json(403, { errorCode, message: 'No access' })));
+    for (let index = 0; index < specialCodes.length; index += 1) {
+      await apiGet('/x').catch(() => undefined);
+    }
+    off();
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('excludes authenticated skipTenant and public 403 requests', async () => {
+    const listener = jest.fn();
+    const off = onApiEvent('forbidden', listener);
+    setup([json(403, {}), json(403, {})]);
+    await apiGet('/identity/me', { skipTenant: true }).catch(() => undefined);
+    await apiPost('/identity/login', {}, { skipTenant: true, public: true }).catch(() => undefined);
+    off();
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('binds a delayed 403 to the tenant used when the request started', async () => {
+    let respond!: (response: Response) => void;
+    const fetchImpl = jest.fn(() => new Promise<Response>((resolve) => (respond = resolve)));
+    const getTenantId = jest.fn(() => 'tenant-a');
+    const { adapter } = setup([], { getTenantId });
+    configureClient({
+      baseUrl: BASE,
+      auth: adapter,
+      retryDelaysMs: [],
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    const listener = jest.fn();
+    const off = onApiEvent('forbidden', listener);
+    const request = apiGet('/x').catch(() => undefined);
+    await Promise.resolve();
+    getTenantId.mockReturnValue('tenant-b');
+    respond(json(403, { errorCode: 'HTTP_FORBIDDEN', message: 'No access' }));
+    await request;
+    off();
+    expect(listener).toHaveBeenCalledWith({ tenantId: 'tenant-a' });
+  });
+
   describe('401 handling', () => {
     it('refreshes once and replays the request', async () => {
       const { fetchImpl, adapter } = setup([json(401, { message: 'expired' }), json(200, { ok: 1 })]);

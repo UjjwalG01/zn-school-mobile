@@ -110,15 +110,19 @@ async function fetchWithRetry(method: Method, url: string, init: RequestInit): P
   }
 }
 
-function buildUrl(path: string, options: ApiRequestOptions): string {
-  const { baseUrl, auth } = requireConfig();
+function buildUrl(
+  path: string,
+  options: ApiRequestOptions,
+  requestTenantId: string | null,
+): { url: string; tenantId: string | null } {
+  const { baseUrl } = requireConfig();
   const url = new URL(path, `${baseUrl}/`);
+  const tenantId = options.skipTenant ? null : requestTenantId;
   if (!options.skipTenant) {
-    const tenantId = auth?.getTenantId() ?? null;
     if (!tenantId) throw new ApiError(400, 'No Tenant ID set');
     url.searchParams.set('tenantId', tenantId);
   }
-  return url.toString();
+  return { url: url.toString(), tenantId };
 }
 
 async function perform(
@@ -126,19 +130,23 @@ async function perform(
   path: string,
   body: unknown,
   options: ApiRequestOptions,
-): Promise<Response> {
-  const url = buildUrl(path, options);
+  requestTenantId: string | null,
+): Promise<{ response: Response; tenantId: string | null }> {
+  const { url, tenantId } = buildUrl(path, options, requestTenantId);
   const headers: Record<string, string> = {};
   if (!options.public) {
     const token = await requireConfig().auth?.getAccessToken();
     if (token) headers.Authorization = `Bearer ${token}`;
   }
   if (body !== undefined) headers['Content-Type'] = 'application/json';
-  return fetchWithRetry(method, url, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  return {
+    response: await fetchWithRetry(method, url, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
+    tenantId,
+  };
 }
 
 async function send<T>(
@@ -147,11 +155,16 @@ async function send<T>(
   body: unknown,
   options: ApiRequestOptions,
 ): Promise<T> {
-  let response = await perform(method, path, body, options);
+  const requestTenantId = options.skipTenant ? null : requireConfig().auth?.getTenantId() ?? null;
+  let result = await perform(method, path, body, options, requestTenantId);
+  let { response } = result;
 
   if (response.status === 401 && !options.public) {
     // Refresh once (single-flight) and replay once; a second 401 ends the session.
-    if (await refreshSessionOnce()) response = await perform(method, path, body, options);
+    if (await refreshSessionOnce()) {
+      result = await perform(method, path, body, options, requestTenantId);
+      response = result.response;
+    }
     if (response.status === 401) emitApiEvent('unauthorized', undefined);
   }
 
@@ -162,6 +175,18 @@ async function send<T>(
     if (errorCode === 'TENANT_ACCESS_DENIED') emitApiEvent('school-suspended', undefined);
     if (errorCode && LICENSE_BLOCK_CODES.has(errorCode)) {
       emitApiEvent('license-blocked', { errorCode, message });
+    }
+    if (
+      response.status === 403 &&
+      result.tenantId &&
+      !options.public &&
+      errorCode !== 'ENTITLEMENT_DENIED' &&
+      errorCode !== 'TENANT_AUDIENCE_DENIED' &&
+      errorCode !== 'TENANT_MEMBERSHIP_NOT_FOUND' &&
+      errorCode !== 'TENANT_ACCESS_DENIED' &&
+      !(errorCode && LICENSE_BLOCK_CODES.has(errorCode))
+    ) {
+      emitApiEvent('forbidden', { tenantId: result.tenantId });
     }
     // An HTML proxy page must not surface as a user message.
     const usable = message.length > 0 && message.length <= 300 && !message.startsWith('<');

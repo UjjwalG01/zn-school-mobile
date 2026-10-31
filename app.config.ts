@@ -20,6 +20,11 @@ const config: ExpoConfig = {
   slug: 'zn-school-mobile',
   version: '1.0.0',
   scheme: 'znschool',
+  extra: {
+    eas: {
+      projectId: '96bf9255-0a16-4801-9f6d-64be25e8bf0e',
+    },
+  },
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'automatic',
