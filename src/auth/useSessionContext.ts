@@ -11,12 +11,6 @@ import { chooseSchool, forgetSchool } from './schoolActions';
 import { type SchoolBlock, setShells, useSession } from './session';
 import type { Shell } from './tenantStore';
 
-/**
- * No endpoint exposes a guardian-audience role until backend B4 ships (Proposed). Flip this when
- * that source exists; the guardian shell and `resolveShells` are already in place.
- */
-const GUARDIAN_ROLE_AVAILABLE = false;
-
 export type ContextState =
   | { kind: 'loading' }
   | { kind: 'error'; error: unknown; retry: () => void }
@@ -48,7 +42,7 @@ export function useSessionContext(): ContextState {
 
   const permissions = useMyPermissions(tenantId, session.blocked === null);
   const available = permissions.data
-    ? resolveShells({ permissions: permissions.data, isGuardian: GUARDIAN_ROLE_AVAILABLE })
+    ? resolveShells({ permissions: permissions.data })
     : null;
   const shell = available ? pickShell(available, session.shell) : null;
   const availableKey = available?.join(',') ?? null;

@@ -10,6 +10,7 @@ const mockReplace = jest.fn();
 const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
   useRouter: () => ({ replace: mockReplace, push: mockPush, back: jest.fn() }),
+  useLocalSearchParams: () => ({}),
 }));
 jest.mock('../src/api/identity', () => ({ login: jest.fn() }));
 jest.mock('../src/auth/tokenStore', () => ({
@@ -56,12 +57,12 @@ describe('Login screen', () => {
     expect(screen.getByLabelText('Password').props.secureTextEntry).toBe(false);
   });
 
-  it('never calls the backend with a phone number', async () => {
+  it('sends a phone number as the identifier, as typed', async () => {
+    mockLogin.mockResolvedValueOnce({ accessToken: 'a', refreshToken: 'r' });
     await render(<LoginScreen />);
     await fill('9841234567', 'secret123');
     await fireEvent.press(screen.getByRole('button', { name: 'Sign in with your school' }));
-    expect(screen.getByText(/Phone sign-in coming soon/)).toBeTruthy();
-    expect(mockLogin).not.toHaveBeenCalled();
+    expect(mockLogin).toHaveBeenCalledWith('9841234567', 'secret123');
   });
 
   it('requires both fields', async () => {

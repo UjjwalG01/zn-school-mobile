@@ -6,19 +6,20 @@ import type { Shell } from './tenantStore';
 /** A holder of either permission can do teacher work (B5 assignments are not available yet). */
 export const TEACHER_PERMISSIONS = ['attendance.mark', 'exam_result.save'] as const;
 
+/** Held by a guardian in a school (the six `portal.*` keys of a guardian role; GV-D2). An account that is also a teacher gets both shells. */
+export const GUARDIAN_PERMISSION = 'portal.student.read';
+
 export interface ShellInput {
   permissions: MyPermissions;
-  /** Guardian-audience role. No endpoint exposes it until B4, so callers pass false today. */
-  isGuardian: boolean;
 }
 
 /** Shells the user can use in the selected school. Empty = "use the web app". */
-export function resolveShells({ permissions, isGuardian }: ShellInput): Shell[] {
+export function resolveShells({ permissions }: ShellInput): Shell[] {
   const shells: Shell[] = [];
   if (permissions.all || TEACHER_PERMISSIONS.some((key) => permissions.keys.includes(key))) {
     shells.push('teacher');
   }
-  if (isGuardian) shells.push('guardian');
+  if (permissions.keys.includes(GUARDIAN_PERMISSION)) shells.push('guardian');
   return shells;
 }
 

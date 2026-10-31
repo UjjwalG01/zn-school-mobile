@@ -11,29 +11,31 @@ const school = (tenantId: string): School => ({
 
 describe('resolveShells (ARCHITECTURE §3)', () => {
   it('teacher shell for attendance.mark or exam_result.save', () => {
-    expect(resolveShells({ permissions: perms(['attendance.mark']), isGuardian: false })).toEqual(['teacher']);
-    expect(resolveShells({ permissions: perms(['exam_result.save']), isGuardian: false })).toEqual(['teacher']);
+    expect(resolveShells({ permissions: perms(['attendance.mark']) })).toEqual(['teacher']);
+    expect(resolveShells({ permissions: perms(['exam_result.save']) })).toEqual(['teacher']);
   });
 
   it('teacher shell for a user holding every permission', () => {
-    expect(resolveShells({ permissions: perms([], true), isGuardian: false })).toEqual(['teacher']);
+    expect(resolveShells({ permissions: perms([], true) })).toEqual(['teacher']);
   });
 
-  it('guardian shell for the guardian role only', () => {
-    expect(resolveShells({ permissions: perms([]), isGuardian: true })).toEqual(['guardian']);
+  it('guardian shell for portal.student.read (the guardian role)', () => {
+    expect(resolveShells({ permissions: perms(['portal.student.read', 'portal.fees.read']) })).toEqual(['guardian']);
+  });
+
+  it('a guardian-only permission set never gets the teacher shell', () => {
+    expect(resolveShells({ permissions: perms(['portal.student.read']) })).not.toContain('teacher');
   });
 
   it('both shells when the user is a teacher and a guardian', () => {
-    expect(resolveShells({ permissions: perms(['attendance.mark']), isGuardian: true })).toEqual([
+    expect(resolveShells({ permissions: perms(['attendance.mark', 'portal.student.read']) })).toEqual([
       'teacher',
       'guardian',
     ]);
   });
 
   it('no shell → "use the web app" (e.g. an accountant)', () => {
-    expect(
-      resolveShells({ permissions: perms(['finance.payment.create', 'finance.invoice.read']), isGuardian: false }),
-    ).toEqual([]);
+    expect(resolveShells({ permissions: perms(['finance.payment.create', 'finance.invoice.read']) })).toEqual([]);
   });
 });
 

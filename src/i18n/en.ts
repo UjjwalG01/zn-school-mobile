@@ -13,7 +13,6 @@ export const en = {
 
   'auth.error.identifierRequired': 'Enter your phone or email.',
   'auth.error.invalidEmail': 'Enter a valid email address.',
-  'auth.error.phoneSoon': 'Phone sign-in coming soon. Please use your email for now.',
   'auth.error.passwordRequired': 'Enter your password.',
   'auth.error.invalidCredentials': 'Incorrect email or password. Please try again.',
   'auth.error.tooManyAttempts': 'Too many attempts. Wait a few minutes before trying again.',
@@ -24,8 +23,21 @@ export const en = {
   'auth.error.generic': 'Could not sign in. Please try again.',
 
   'activate.title': 'Activate account',
-  'activate.body':
-    'Account activation is coming soon. Keep the activation code from your school ready.',
+  'activate.hint': 'Enter the 8-character code your school gave you, and the phone or email it was issued to.',
+  'activate.codeLabel': 'Activation code',
+  'activate.identifierLabel': 'Phone or email on record',
+  'activate.passwordLabel': 'New password',
+  'activate.currentPasswordLabel': 'Your current password',
+  'activate.confirmLabel': 'Confirm new password',
+  'activate.submit': 'Activate',
+  'activate.error.codeRequired': 'Enter the activation code.',
+  'activate.error.identifierRequired': 'Enter the phone or email the code was issued to.',
+  'activate.error.passwordShort': 'Use at least 8 characters.',
+  'activate.error.passwordMismatch': 'The passwords do not match.',
+  'activate.error.codeInvalid': 'That code is wrong or has expired. Ask your school for a new one.',
+  'activate.error.currentPasswordRequired':
+    'This account already exists. Enter its current password to add this school.',
+  'activate.done': 'Account ready. Sign in to continue.',
 
   'auth.notice.sessionExpired': 'Your session has expired. Please sign in again.',
 
@@ -73,6 +85,12 @@ export const en = {
   'shell.guardian': 'Guardian',
   'shell.home': 'Home',
   'shell.placeholder': 'Features for this area are coming soon.',
+
+  'guardian.home.title': 'Your children',
+  'guardian.home.empty': 'No student is linked to your account yet. Ask the school to link your children.',
+  'guardian.home.placement': 'Class {className}{sectionName}',
+  'guardian.home.noPlacement': 'Not placed in a class yet',
+  'guardian.home.error': 'Could not load your children. Check your connection and try again.',
   'shell.school': 'School',
   'shell.signedInAs': 'Signed in as {name}',
   'shell.switchSchool': 'Switch school',

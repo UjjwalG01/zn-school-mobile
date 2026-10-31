@@ -3,6 +3,23 @@
 import { apiGet } from './client';
 import type { TeacherExam, TeacherMyClasses, TeacherStudent } from './types/portal';
 
+/** One student linked to the caller (`GET /portal/guardian/students`): every link, one row each. Placement is null without an enrollment. */
+export interface GuardianStudent {
+  studentId: string;
+  fullName: string;
+  admissionNumber: string;
+  status: string;
+  relationship: string;
+  isPrimary: boolean;
+  classId: string | null;
+  className: string | null;
+  sectionId: string | null;
+  sectionName: string | null;
+}
+
+/** `GET /portal/guardian/students` — the children linked to the signed-in guardian in the selected school. Needs `portal.student.read`. */
+export const getGuardianStudents = () => apiGet<GuardianStudent[]>('/portal/guardian/students');
+
 /** `GET /portal/teacher/my-classes?date=` — class placements + subject assignments. `date` is `YYYY-MM-DD`. */
 export const getTeacherMyClasses = (date: string) =>
   apiGet<TeacherMyClasses>(`/portal/teacher/my-classes?date=${encodeURIComponent(date)}`);

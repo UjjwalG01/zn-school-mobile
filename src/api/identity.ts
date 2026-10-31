@@ -1,5 +1,4 @@
-// Typed requests for /identity/* (docs/api/API_CONTRACT.md §2). Only endpoints that EXIST today.
-// B1/B2 (identifier + clientType) and B3 (activation code) are Proposed — not called from here.
+// Typed requests for /identity/* (docs/api/API_CONTRACT.md §2). Only endpoints the backend has built.
 import { apiGet, apiPost } from './client';
 import type { Me } from './types/identity';
 
@@ -10,9 +9,22 @@ export interface TokenPair {
 
 const PUBLIC = { public: true, skipTenant: true } as const;
 
-/** `POST /identity/login` — public, not tenant-scoped. Today's body is `{ email, password }`. */
-export const login = (email: string, password: string) =>
-  apiPost<TokenPair>('/identity/login', { email, password }, PUBLIC);
+/**
+ * `POST /identity/login` — public, not tenant-scoped. `identifier` is the e-mail or phone on record; `clientType: 'mobile'`
+ * selects the 7-day idle limit (ADR-0066).
+ */
+export const login = (identifier: string, password: string) =>
+  apiPost<TokenPair>('/identity/login', { identifier, password, clientType: 'mobile' }, PUBLIC);
+
+export type ActivationStatus = 'activated' | 'guardian_added' | 'password_reset';
+
+/**
+ * `POST /identity/activate` — public. Redeems a school's 8-character code (a staff invitation or a guardian code, ADR-0082 /
+ * ADR-0067). `password` is the new one for a new account, the account's current one when it gains access to another school
+ * (`ACTIVATION_PASSWORD_REQUIRED` otherwise), or the new one for an admin reset. Does not sign in: call `login` next.
+ */
+export const activate = (body: { code: string; identifier: string; password?: string }) =>
+  apiPost<{ status: ActivationStatus }>('/identity/activate', body, PUBLIC);
 
 /** `POST /identity/refresh` — public. Rotates: the old refresh token stops working. */
 export const refreshTokens = (refreshToken: string) =>

@@ -8,7 +8,7 @@ const PHONE = /^\+?[\d\s-]{7,}$/;
 
 export type IdentifierKind = 'empty' | 'email' | 'phone' | 'invalid';
 
-/** Only `email` can be submitted today; phone login is Proposed (B2). */
+/** An e-mail or a phone number; the server normalises the phone (a national number gets +977). */
 export function classifyIdentifier(raw: string): IdentifierKind {
   const value = raw.trim();
   if (!value) return 'empty';

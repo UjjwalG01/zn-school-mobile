@@ -5,8 +5,8 @@ import { brandHeaderOptions } from '../../src/components/BrandHeader';
 import { ShellSwitcher } from '../../src/components/ShellSwitcher';
 import { t } from '../../src/i18n';
 
-// Placeholder tab layout. Unreachable until backend B4 exposes a guardian role (see
-// useSessionContext). Real tabs come from the feature registry in M3.
+// Guardian tabs (GV-D9; G1 ships Home and Profile, the rest follow in G3 to G6). The Profile screen is the shared one: Switch school,
+// Sign out and the shell switcher work the same for every shell.
 export default function GuardianLayout() {
   const guard = useGuard('guardian');
   if (guard.kind === 'wait') return null;
@@ -14,6 +14,7 @@ export default function GuardianLayout() {
   return (
     <Tabs screenOptions={{ ...brandHeaderOptions, headerRight: () => <ShellSwitcher inverse /> }}>
       <Tabs.Screen name="index" options={{ title: t('shell.home') }} />
+      <Tabs.Screen name="profile" options={{ title: t('tabs.profile') }} />
     </Tabs>
   );
 }

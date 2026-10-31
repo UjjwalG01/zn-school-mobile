@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { View } from 'react-native';
 
@@ -17,7 +17,9 @@ import { useTheme } from '../../src/theme/useTheme';
 export default function LoginScreen() {
   const router = useRouter();
   const { colors, spacing, radius } = useTheme();
-  const [identifier, setIdentifier] = useState('');
+  // Back from activation the identifier arrives pre-filled (`/login?identifier=…`); it is never a stored value.
+  const params = useLocalSearchParams<{ identifier?: string }>();
+  const [identifier, setIdentifier] = useState(typeof params.identifier === 'string' ? params.identifier : '');
   const [password, setPassword] = useState('');
   const [identifierError, setIdentifierError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -33,11 +35,9 @@ export default function LoginScreen() {
     const nextIdentifierError =
       kind === 'empty'
         ? t('auth.error.identifierRequired')
-        : kind === 'phone'
-          ? t('auth.error.phoneSoon') // B2 is Proposed: never call the backend with a phone number
-          : kind === 'invalid'
-            ? t('auth.error.invalidEmail')
-            : null;
+        : kind === 'invalid'
+          ? t('auth.error.invalidEmail')
+          : null;
     const nextPasswordError = password ? null : t('auth.error.passwordRequired');
     setIdentifierError(nextIdentifierError);
     setPasswordError(nextPasswordError);
@@ -107,7 +107,7 @@ export default function LoginScreen() {
           value={identifier}
           onChangeText={setIdentifier}
           error={identifierError}
-          keyboardType="email-address"
+          keyboardType="default"
           autoCapitalize="none"
           autoCorrect={false}
           autoComplete="username"

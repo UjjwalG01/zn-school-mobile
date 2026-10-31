@@ -14,7 +14,6 @@ export const ne: Record<MessageKey, string> = {
 
   'auth.error.identifierRequired': 'फोन वा इमेल प्रविष्ट गर्नुहोस्।',
   'auth.error.invalidEmail': 'मान्य इमेल ठेगाना प्रविष्ट गर्नुहोस्।',
-  'auth.error.phoneSoon': 'फोनबाट साइन इन चाँडै उपलब्ध हुनेछ। अहिलेको लागि इमेल प्रयोग गर्नुहोस्।',
   'auth.error.passwordRequired': 'पासवर्ड प्रविष्ट गर्नुहोस्।',
   'auth.error.invalidCredentials': 'इमेल वा पासवर्ड मिलेन। कृपया फेरि प्रयास गर्नुहोस्।',
   'auth.error.tooManyAttempts': 'धेरै पटक प्रयास गरियो। केही मिनेट पर्खेर फेरि प्रयास गर्नुहोस्।',
@@ -25,8 +24,21 @@ export const ne: Record<MessageKey, string> = {
   'auth.error.generic': 'साइन इन गर्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्।',
 
   'activate.title': 'खाता सक्रिय गर्नुहोस्',
-  'activate.body':
-    'खाता सक्रिय गर्ने सुविधा चाँडै आउँदैछ। तपाईंको विद्यालयले दिएको सक्रियता कोड तयार राख्नुहोस्।',
+  'activate.hint': 'तपाईंको विद्यालयले दिएको ८ अक्षरको कोड र जुन फोन वा इमेलमा दिइएको थियो सो प्रविष्ट गर्नुहोस्।',
+  'activate.codeLabel': 'सक्रियता कोड',
+  'activate.identifierLabel': 'रेकर्डमा भएको फोन वा इमेल',
+  'activate.passwordLabel': 'नयाँ पासवर्ड',
+  'activate.currentPasswordLabel': 'तपाईंको हालको पासवर्ड',
+  'activate.confirmLabel': 'नयाँ पासवर्ड पुष्टि गर्नुहोस्',
+  'activate.submit': 'सक्रिय गर्नुहोस्',
+  'activate.error.codeRequired': 'सक्रियता कोड प्रविष्ट गर्नुहोस्।',
+  'activate.error.identifierRequired': 'कोड दिइएको फोन वा इमेल प्रविष्ट गर्नुहोस्।',
+  'activate.error.passwordShort': 'कम्तीमा ८ अक्षर प्रयोग गर्नुहोस्।',
+  'activate.error.passwordMismatch': 'पासवर्डहरू मिलेनन्।',
+  'activate.error.codeInvalid': 'कोड गलत छ वा म्याद सकिएको छ। विद्यालयबाट नयाँ कोड माग्नुहोस्।',
+  'activate.error.currentPasswordRequired':
+    'यो खाता पहिल्यादेखि छ। यो विद्यालय थप्न यसको हालको पासवर्ड प्रविष्ट गर्नुहोस्।',
+  'activate.done': 'खाता तयार छ। अघि बढ्न साइन इन गर्नुहोस्।',
 
   'auth.notice.sessionExpired': 'तपाईंको सत्र समाप्त भयो। कृपया फेरि साइन इन गर्नुहोस्।',
 
@@ -76,6 +88,11 @@ export const ne: Record<MessageKey, string> = {
   'shell.teacher': 'शिक्षक',
   'shell.guardian': 'अभिभावक',
   'shell.home': 'गृहपृष्ठ',
+  'guardian.home.title': 'तपाईंका बच्चाहरू',
+  'guardian.home.empty': 'तपाईंको खातामा अहिलेसम्म कुनै विद्यार्थी जोडिएको छैन। विद्यालयलाई तपाईंका बच्चा जोड्न भन्नुहोस्।',
+  'guardian.home.placement': 'कक्षा {className}{sectionName}',
+  'guardian.home.noPlacement': 'अहिलेसम्म कक्षामा राखिएको छैन',
+  'guardian.home.error': 'तपाईंका बच्चाहरू लोड गर्न सकिएन। इन्टरनेट जाँच गरेर फेरि प्रयास गर्नुहोस्।',
   'shell.placeholder': 'यस क्षेत्रका सुविधाहरू चाँडै आउँदैछन्।',
   'shell.school': 'विद्यालय',
   'shell.signedInAs': '{name} को रूपमा साइन इन',
