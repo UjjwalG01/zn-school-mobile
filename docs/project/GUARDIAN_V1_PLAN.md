@@ -8,7 +8,7 @@ access: Read
 
 ## Status
 
-**Draft, written 2026-10-22. Not approved. No Guardian mobile implementation is built.** It details Phase 3 of `V1_DELIVERY_PLAN.md` (the task list
+**Draft, written 2026-10-22. Steps G0 and G1 are built on 2026-10-31 (not device-verified): phone or email login with `clientType: 'mobile'`, the activation screen for every school code (guardian, staff invitation, existing account, reset), the guardian shell from `portal.student.read`, the Home children list and the shared Profile. G2 to G7 are not built.** It details Phase 3 of `V1_DELIVERY_PLAN.md` (the task list
 there stays the master list) and belongs to roadmap M1 part B and M3, with the guardian side of M4.
 
 **Gate (owner's recommendation, `V1_DELIVERY_PLAN.md` §5): do not start building before Phase 2 (Teacher V1) is verified on
