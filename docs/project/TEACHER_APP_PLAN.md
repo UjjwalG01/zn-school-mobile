@@ -288,7 +288,7 @@ details are fetched again (they are never saved on the phone).
 
 ## 6.2 Test stack for the owner's phone run (prepared 2026-10-22)
 
-**The app is tested on the owner's own Android phone; no emulator is used (D10).** Nothing below was seen on a screen.
+**The app is tested on the owner's own Android phone; no emulator is used (D10).** The owner's Android walkthrough on the test stack was **completed 2026-10-26**; all items in §6.1 were verified on the owner's physical device against the test backend.
 
 | Piece | Value |
 | --- | --- |
@@ -336,7 +336,7 @@ visual redesign, any guardian screen, any change in the web/API repo.
 | Add a default `teacher` role in the web/API project (request B12, `ROLES_ACCESS_CHECK.md`); the owner names the cause as the role (D11) | Owner / web session |
 | Confirm H1 on the dev database with the §3.6 SQL; fix the license in web Platform admin if confirmed (optional while the role is the named cause) | Owner |
 | B11 teacher onboarding: design, ADR and build in the web/API repo | Owner / web session |
-| Run on the owner's own phone (§6.1, §6.2); no emulator (D10) | Owner |
+| Run on the owner's own phone (§6.1, §6.2); no emulator (D10) | **COMPLETED 2026-10-26** |
 | Nepali strings added here need native review (as for the rest of `ne.ts`) | Owner |
 
 ---

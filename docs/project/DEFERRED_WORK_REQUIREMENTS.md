@@ -8,15 +8,12 @@ access: Read
 
 ## Status
 
-Written 2026-10-22 on the owner's question. **None of the three deferred items is implemented** (audit 2026-10-25). Evidence is **Static** (read from code and
+Written 2026-10-22 on the owner's question. Item 1 (plain-403 cache wipe) is **implemented and verified by automated tests** (audit 2026-10-26); physical-device verification on a test stack remains pending. Items 2 and 3 remain unbuilt (audit 2026-10-25). Evidence is **Static** (read from code and
 documents on 2026-10-22) unless a line says Reproduced; the Reproduced facts come from the live checks recorded in
 `TEACHER_APP_PLAN.md` E9/E10 and `GUARDIAN_V1_PLAN.md` E-G1. Owner rules that apply: no ADR is marked Accepted by the
 assistant; protected files change only on the owner's approval; a decision that touches architecture waits for the owner.
 
-**Mobile-project audit (2026-10-25).** Item 1 is still missing: a tenant-scoped 403 maps to `forbidden`, but the app does not
-revalidate access or remove that school's cached queries app-wide. Current write hooks invalidate selected queries only; a
-read may continue to display persisted cached data. No code or test was found for `revalidateAccess` or a global 403 wipe.
-Items 2 and 3 are backend/web work and have no mobile implementation. The built `default_teacher` role (B12) does not
+**Mobile-project audit (2026-10-26).** Item 1 is implemented and verified by automated tests: `src/api/client.ts` emits `forbidden` for eligible tenant-route 403 responses (excluding special codes, public requests, and `skipTenant` requests) bound to the originating tenant; `SessionEvents.tsx` handles the event with a per-tenant loop guard; and `removePersistedTenantQueries` in `src/lib/queryClient.ts` selectively clears the affected tenant's in-memory and persisted query cache while guarding against persistence race conditions and preserving other-tenant and user-scoped data. Physical-device verification on the owner's phone against a test backend remains pending. Items 2 and 3 are backend/web work and have no mobile implementation. The built `default_teacher` role (B12) does not
 implement B11's atomic staff + login + membership + role onboarding flow.
 
 **Decision reconciliation.** `V1_DELIVERY_PLAN.md` §11 (V-D3) records the owner's decision to wipe the school's cached data
@@ -25,18 +22,18 @@ permission re-check is not the selected behavior unless the owner revises the de
 already-recorded owner decision, not a new decision. Implement the loop guard as part of item 1; do not let a refused request
 cause an unbounded re-fetch/wipe cycle.
 
-**Next work.** The next mobile implementation from this requirements plan is item 1 (plain-403 school cache wipe), which
-should land before Guardian V1 G1. Independently, `V1_DELIVERY_PLAN.md` Phase 1 still makes the owner's Android test-stack
+**Next work.** Item 1 is implemented and verified by automated tests; physical-device verification against the test backend remains pending. Independently, `V1_DELIVERY_PLAN.md` Phase 1 still makes the owner's Android test-stack
 walkthrough the next project verification gate; that device run does not depend on any of these three items. Item 2 needs an
 owner-requested backend ADR before code; item 3 needs the owner's B11-1…B11-6 answers and an accepted backend ADR before code.
 
 | Item                           | Where                      | Needs an ADR                   | Needs an owner decision first        | Can the assistant start now                   | Size |
 | ------------------------------ | -------------------------- | ------------------------------ | ------------------------------------ | --------------------------------------------- | ---- |
-| 1. Plain-403 cache wipe        | mobile only                | no (it implements ADR-0065 D8) | **Answered:** V-D3 selects option (a) | yes; implement the selected behavior in §1.4 | M    |
+| 1. Plain-403 cache wipe        | mobile only                | no (it implements ADR-0065 D8) | **Answered:** V-D3 selects option (a) | **Implemented and automated-verified;** physical-device verification pending alongside general walkthrough | M    |
 | 2. Row-level security on roles | backend (and test helpers) | **yes**, amending ADR-0033 D8  | the ADR itself (accept, then build)  | the ADR draft yes; code after acceptance      | L    |
 | 3. B11 onboarding              | backend and web            | **yes**                        | scope and rules (§3.2)               | the ADR draft yes; code after acceptance      | L    |
+| 4. B21 routine prerequisite    | mobile only (backend must implement first) | no (draft only) | **Answered:** draft defines `GET /portal/teacher/exam-routines` contract; backend must implement before mobile Phase 2 display work | Draft ready; backend implementation needed first | S    |
 
-**Backend plan (2026-10-29).** Items 2 to 4 and the other open backend requests (B11, B13 to B15, B17 to B21) are now planned in the web/API repository, phase by phase, with their ADR drafts, tests and gates; see §5. The owner accepted B11-1…B11-6 as recommended and chose new `exam_result.read_any` / `attendance.read_any` keys for the read-scoping asks. Phases 1 to 3 are built there (2026-10-29; the dev API container is not yet rebuilt); phases 4 to 6 are planned.
+**Backend plan (2026-10-29).** Items 2 to 4 and the other open backend requests (B11, B13 to B15, B17 to B21) are now planned in the web/API repository, phase by phase, with their ADR drafts, tests and gates; see §5. The owner accepted B11-1…B11-6 as recommended and chose new `exam_result.read_any` / `attendance.read_any` keys for the read-scoping asks. Phases 1 to 5 are built there (2026-10-29; the dev API container was rebuilt the same day); phase 6 is planned.
 
 The three are independent of each other. None of them blocks the marks phone run. Item 1 should land before Guardian V1
 step G1, because a revoked guardian relies on it.
@@ -50,13 +47,12 @@ step G1, because a revoked guardian relies on it.
 - **The rule it implements.** Backend ADR-0065 D8: the cache, the tokens and the tenant store are wiped on logout; a failed
   refresh (401); _"a 403 with `errorCode = TENANT_MEMBERSHIP_NOT_FOUND` **or any permission revocation**"_; and a school
   switch that changes the shell.
-- **What the app does today.** `TENANT_MEMBERSHIP_NOT_FOUND` → `tenant-access-lost` → `dropSelectedSchool` (wipes that
-  school's queries). Any other 403 is `forbidden`: the write hooks only _invalidate_ `my-permissions` (and, for marks,
-  the exam list and `my-classes`); reads show "no access" or keep **cached data on screen** (`queryView`: cached data
-  always wins; the persisted cache lives 7 days). So a revoked teacher or guardian keeps seeing what they last loaded.
+- **Implementation status (2026-10-26).** Implemented per V-D3 (option a). Eligible tenant-route 403 responses emit a tenant-bound `forbidden` event (`src/api/client.ts`), handled by `SessionEvents.tsx` using a per-tenant loop guard (`forbiddenTenants`). `removePersistedTenantQueries` in `src/lib/queryClient.ts` drops the tenant's queries in memory and rewrites the persisted cache snapshot in AsyncStorage with generation tracking, preventing reviving of wiped data by throttled writes or hydration. User-scoped (`_user`) and other-tenant queries are preserved.
+- **Previous app behavior (prior to implementation).** `TENANT_MEMBERSHIP_NOT_FOUND` → `tenant-access-lost` → `dropSelectedSchool` (wipes that
+  school's queries). Any other 403 mapped to `forbidden` without wiping cached reads, meaning persisted cached data remained visible.
 - **The owner's answer (V-D3, 2026-10-22):** wipe the school's cached data on a plain 403, app-wide, with a loop guard.
 - **Reproduced:** revoking a guardian's access made the _same_ access token get 403 on the next call at once (E-G1), so
-  the server side of revocation is immediate; only the client reaction is missing.
+  the server side of revocation is immediate; client reaction is now implemented.
 
 ## 1.2 Decision recorded and implementation consequence
 
@@ -84,24 +80,32 @@ checks are UX hints only.
 
 1. **Event.** `src/api/client.ts` emits a new `forbidden` API event only for an eligible tenant-route 403, excluding handled
    membership, school/license, entitlement and audience codes. Do not react to public/identity requests, missing tenant
-   context, or the handler's own work.
+   context, or the handler's own work. (**Implemented:** `client.ts` binds `tenantId` from originating request, verifies `!options.public`, and excludes special codes).
 2. **Handler and loop guard.** `SessionEvents` handles the event using the selected tenant from the session. Use a per-tenant
    single-flight/cooldown or equivalent guard, and suppress a retry loop from a screen that immediately re-fetches after its
-   query is removed. This is a guard for the selected literal-wipe behavior, not an access revalidation.
+   query is removed. This is a guard for the selected literal-wipe behavior, not an access revalidation. (**Implemented:** `SessionEvents.tsx` maintains `forbiddenTenants` guard set per tenant, cleared on school/session switch).
 3. **Wipe.** Call `removeTenantQueries` for only the selected school, then ensure the persisted query-cache blob is rewritten
    or removed so a killed app cannot restore the wiped tenant data. Preserve unrelated tenant and user-scoped session data as
-   required for the app to resolve the next shell; let `useSessionContext` re-resolve access.
+   required for the app to resolve the next shell; let `useSessionContext` re-resolve access. (**Implemented:** `removePersistedTenantQueries` in `src/lib/queryClient.ts` drops in-memory tenant queries and serializes clean snapshot to AsyncStorage with generation barrier).
 4. **Guardian.** A 403 on a child id removes that child from the local list (`GUARDIAN_V1_PLAN.md` §3 item 4); that is
    Guardian work and is not part of this item.
-5. **Remove** per-hook invalidations only if they become redundant; otherwise leave them.
+5. **Remove** per-hook invalidations only if they become redundant; otherwise leave them. (**Preserved:** existing per-hook invalidations left intact as defense in depth).
 
 ## 1.5 Tests and evidence
 
-Unit: eligible plain 403 removes only the selected tenant's queries; the loop guard prevents repeated refetch/wipe; special
-membership, school/license, entitlement and audience errors retain their existing handling; user-scoped and other-tenant data
-remain intact; the persisted cache cannot restore wiped rows; sign-out and school switch remain unchanged. Live (HTTP, test
-stack): exercise a representative scope 403 and access revocation response; distinguish server behavior from the app reaction.
-Phone: revoke while a screen is open (the owner's run).
+- **Automated verification (2026-10-26):**
+  - Focused suites passed: `client.test.ts` (tenant-bound forbidden emission, special code exclusions, skipTenant/public exclusions, delayed response tenant binding), `SessionEvents.test.tsx` (selected tenant matching, loop guard, stale/signed-out event suppression), `queryClient.test.ts` (selective tenant removal, preservation of other tenants and `_user` scope, generation-barrier protection against throttled-persist revival, hydration coordination), `queryKeys.test.ts` (tenant prefixing and removal), and `logout.test.ts` (complete cache removal).
+  - Repository-wide test suite passed: 86 suites / 812 tests. Typecheck: 0 errors. Lint: 0 errors, 1 pre-existing warning in `CurvedHeader.tsx`.
+- **Physical-device verification requirement (Pending):**
+  - Not yet run on a physical device against a running test backend.
+  - The owner's general Android walkthrough does not substitute for exercising the plain-403 cache wipe under live access revocation.
+  - Verification checklist for the owner's phone run:
+    1. Sign in to a test school and load tenant-scoped data.
+    2. Trigger an eligible tenant-scoped 403 response through the test backend.
+    3. Confirm that cached data for the affected school is removed and does not reappear after navigation or app restart.
+    4. Confirm that unrelated tenant data and user/session state remain intact.
+    5. Confirm that special authorization flows (`TENANT_MEMBERSHIP_NOT_FOUND`, `LICENSE_*`), school switching, and logout retain their existing behavior.
+    6. Record actual device, test environment, scenario, observed result, and any failure.
 
 ## 1.6 Documents
 
@@ -110,8 +114,7 @@ the cache section). Backend ADR-0065 needs **no** change; this implements the ow
 
 ## 1.7 Start condition
 
-**Satisfied:** V-D3 in `V1_DELIVERY_PLAN.md` records the owner's choice of option (a). Item 1 can start in the mobile repo; its
-acceptance criteria are in §1.5. Do not start the backend items from this repo.
+**Satisfied & Implemented:** V-D3 in `V1_DELIVERY_PLAN.md` records the owner's choice of option (a). Implementation and automated test verification are complete. Physical-device check on the owner's Android phone remains pending.
 
 ---
 
@@ -233,7 +236,7 @@ contract; the activation screen for staff stays on the web.
 # 4. Suggested order
 
 1. Run the marks / teacher Android walkthrough on the test stack (independent of all three deferred items; owner-run per D10).
-2. Implement item 1 (plain-403 school-cache wipe) in the mobile repo; V-D3 has already answered the decision and it should land before Guardian V1 G1.
+2. Item 1 (plain-403 school-cache wipe) is implemented and automated-verified; physical-device verification against the test stack remains to be exercised before Guardian V1 G1.
 3. Ask for the two backend ADR drafts (items 2 and 3) when ready; they can be written in parallel and accepted separately. Item 3 also needs B11-1…B11-6 answered before implementation.
 4. Guardian V1 G0/G1 only after the phone run / Phase 2 gate (`GUARDIAN_V1_PLAN.md`), preferably after item 1.
 
@@ -247,15 +250,16 @@ Written 2026-10-29 at the owner's request. The backend design, phases, tests, AD
 
 | Phase | Mobile ask | Backend ADR (provisional, Proposed once drafted) | State |
 | --- | --- | --- | --- |
-| 1 | B14-B, B17 F-1/F-2: scope exam-result, exam-roster and attendance-report reads by assignment, with new keys `exam_result.read_any` and `attendance.read_any` | 0077 | ADR Accepted 2026-10-29; **built 2026-10-29** (migration `0248` on the test and dev database; the dev API container is not yet rebuilt) |
-| 2 | B14-A (`isOptional`, `includeInResults`), B14-C (stable code), B18 (`componentType`), **B21** (`GET /portal/teacher/exam-routines`, item 4 above) | 0078 | ADR Accepted 2026-10-29; **built 2026-10-29** (no schema; not yet deployed to the dev API container) |
-| 3 | B19 (holiday notifications), B20 (`referenceDate` on a notification) | 0078 | ADR Accepted 2026-10-29; **built 2026-10-29** (migration 0249 on the test and development databases; the dev API image is not rebuilt) |
-| 4 | Item 2 / B13: row-level security on roles | 0079 | Planned; ADR first |
-| 5 | Item 3 / B11: atomic staff onboarding (`POST /staff/onboard`) | 0080 | Planned; ADR first |
-| 6 | B15: guardian PDFs, guardian advance pool, school currency, attendance labels for guardians | 0081 | Planned; gated on the teacher phone run |
+| 1 | B14-B, B17 F-1/F-2: scope exam-result, exam-roster and attendance-report reads by assignment, with new keys `exam_result.read_any` and `attendance.read_any` | 0077 | ADR Accepted 2026-10-29; **built 2026-10-29** (migration `0248` on the test and dev database; the dev API container was rebuilt 2026-10-29) |
+| 2 | B14-A (`isOptional`, `includeInResults`), B14-C (stable code), B18 (`componentType`), **B21** (`GET /portal/teacher/exam-routines`, item 4 above) | 0078 | ADR Accepted 2026-10-29; **built 2026-10-29** (no schema; in the dev API container since its rebuild on 2026-10-29) |
+| 3 | B19 (holiday notifications), B20 (`referenceDate` on a notification) | 0078 | ADR Accepted 2026-10-29; **built 2026-10-29** (migration 0249 on the test and development databases; the dev API image was rebuilt 2026-10-29) |
+| 4 | Item 2 / B13: row-level security on roles | 0079 | ADR Accepted 2026-10-29 (option B for the school switcher; no `membership_roles` policy); **built 2026-10-29** (migration 0250 on the test and development databases, dev API image rebuilt; the app never reads these tables, so nothing changes for it) |
+| 5 | Item 3 / B11: atomic staff onboarding (`POST /staff/onboard`) | 0080 | ADR Accepted 2026-10-29; **built 2026-10-29** in the web repo (no schema; served by the dev API since its rebuild on 2026-10-29; the app does not call it, only the web Staff page) |
+| 6 | B15: guardian PDFs, guardian advance pool, school currency, attendance labels for guardians | 0081 | The phone-run gate is cleared (owner's word, 2026-10-31); ADR-0081 **Accepted 2026-10-31**; backend built 2026-10-31 in the web repository (`0b25e1a`, `c18a63b`); mobile screens in a later mobile stage. Several linked students needs no new endpoint (`GET /portal/guardian/students` already lists them all and the link is proven per request); no web guardian UI is built |
+| 7 | Staff invitation code re-issue and a place to enter it (found while testing B11) | 0082 | ADR-0082 **Accepted 2026-10-31**; backend and a small web drawer, no mobile work |
 
 **Owner decisions recorded 2026-10-29.** B11-1…B11-6 accepted as recommended (§3.2). Read scoping uses new keys copied by migration to every current holder of the matching read key except the platform role `default_teacher`. The plan covers all four tracks. B9 (read replica) stays not built.
 
-**What changes for the app, when each phase lands (phases 1 to 3 are built in the backend, but the dev API container is not yet rebuilt, so the app sees none of it yet):** `componentType`, `isOptional`, `includeInResults` and a stable `code` on marks failures arrive as added fields; `GET /portal/notifications` gains `referenceDate` and a holiday notification `type` (the bell must tolerate an unknown type); `GET /portal/teacher/exam-routines` appears for a future routine screen; teachers with the default role see only their own classes on the web-open reads (the phone already calls only scoped routes). `API_CONTRACT.md` is synced by hand in the same phase as each endpoint. Building these mobile pieces needs its own go-ahead.
+**What changes for the app, when each phase lands (phases 1 to 5 are built in the backend and the dev API container was rebuilt on 2026-10-29, so the dev API serves them; none of it has been run on a phone):** `componentType`, `isOptional`, `includeInResults` and a stable `code` on marks failures arrive as added fields; `GET /portal/notifications` gains `referenceDate` and a holiday notification `type` (the bell must tolerate an unknown type); `GET /portal/teacher/exam-routines` appears for a future routine screen; teachers with the default role see only their own classes on the web-open reads (the phone already calls only scoped routes). `API_CONTRACT.md` is synced by hand in the same phase as each endpoint. Building these mobile pieces needs its own go-ahead.
 
 **Rule unchanged.** No backend code is written from this repository (D1). The plan and proposals files were written in the web/API repository at the owner's request.
