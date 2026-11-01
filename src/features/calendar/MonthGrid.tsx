@@ -1,13 +1,13 @@
 import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import type { CalendarItem } from '../../../../api/types/calendar';
-import { Text } from '../../../../components/Text';
-import { t } from '../../../../i18n';
-import { type CalendarPreference, formatDate } from '../../../../lib/date';
-import { MIN_TOUCH_TARGET } from '../../../../theme/tokens';
-import { useTheme } from '../../../../theme/useTheme';
-import { colorFor, type DayCell, itemsOn, type MonthLayout } from '../calendarModel';
+import type { CalendarItem } from '../../api/types/calendar';
+import { Text } from '../../components/Text';
+import { t } from '../../i18n';
+import { type CalendarPreference, formatDate } from '../../lib/date';
+import { MIN_TOUCH_TARGET } from '../../theme/tokens';
+import { useTheme } from '../../theme/useTheme';
+import { colorFor, type DayCell, itemsOn, type MonthLayout } from './calendarModel';
 
 const WEEKDAY_KEYS = [
   'calendar.weekday.0',
@@ -126,7 +126,7 @@ export function MonthGrid({ layout, items, weeklyOff, today, selected, calendar,
           )}
         </View>
       ))}
-      <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.border }} />
+      {/* <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.border }} /> */}
     </View>
   );
 }

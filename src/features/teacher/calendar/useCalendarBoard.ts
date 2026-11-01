@@ -8,7 +8,7 @@ import { type QueryStateSource, queryView } from '../../../components/QueryState
 import { type CalendarPreference, shiftIsoDate, todayIso } from '../../../lib/date';
 import { useRefreshSchoolsOnFeatureDenied } from '../../featureDenied';
 import { useTenantSettings } from '../../queries';
-import { itemsOn, layoutMonth, type MonthRef, monthOf, shiftMonthRef, upcomingItems } from './calendarModel';
+import { itemsOn, layoutMonth, type MonthRef, monthOf, shiftMonthRef, upcomingItems } from '../../calendar/calendarModel';
 import { UPCOMING_DAYS, useCalendarWindow, useNotices } from './queries';
 
 /** How many upcoming events are listed. */

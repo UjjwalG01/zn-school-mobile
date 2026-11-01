@@ -15,8 +15,8 @@ import { t } from '../../../i18n';
 import { type CalendarPreference, formatDate, formatDayMonth, formatTimestamp } from '../../../lib/date';
 import { useTheme } from '../../../theme/useTheme';
 import { Section } from '../home/sections/Section';
-import { colorFor, weekdayOf } from './calendarModel';
-import { MonthGrid } from './components/MonthGrid';
+import { colorFor, weekdayOf } from '../../calendar/calendarModel';
+import { MonthGrid } from '../../calendar/MonthGrid';
 import type { CalendarBoardState } from './useCalendarBoard';
 
 const KIND_KEY = {
@@ -88,7 +88,7 @@ export function CalendarBoard({ board }: { board: CalendarBoardState }) {
   const { calendar, selected, weeklyOff } = board;
   return (
     <View style={{ gap: spacing.lg }}>
-      <View style={{ gap: spacing.md }}>
+      <Card>
         <Stepper
           label={board.layout.title}
           previousLabel={t('calendar.previousMonth')}
@@ -108,7 +108,7 @@ export function CalendarBoard({ board }: { board: CalendarBoardState }) {
           calendar={calendar}
           onSelect={board.setSelected}
         />
-      </View>
+      </Card>
       <View style={{ gap: spacing.sm }}>
         <Text variant="title" accessibilityRole="header">
           {t('calendar.selectedDay', { date: formatDate(selected, calendar) })}

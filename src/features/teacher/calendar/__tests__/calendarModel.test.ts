@@ -1,7 +1,7 @@
 import type { CalendarItem } from '../../../../api/types/calendar';
 import { BS_MAX_YEAR, bsToAdIso, daysInBsMonth } from '../../../../lib/date';
 import { lightColors } from '../../../../theme/tokens';
-import { colorFor, itemsOn, layoutMonth, monthOf, shiftMonthRef, upcomingItems, weekdayOf } from '../calendarModel';
+import { colorFor, itemsOn, layoutMonth, monthOf, shiftMonthRef, upcomingItems, weekdayOf } from '../../../calendar/calendarModel';
 
 const item = (overrides: Partial<CalendarItem> & Pick<CalendarItem, 'id'>): CalendarItem => ({
   kind: 'event',

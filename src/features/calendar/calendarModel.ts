@@ -2,8 +2,8 @@
 // the school's own calendar (Gregorian or Bikram Sambat) calls a month; every date it stores or sends is the
 // canonical AD `YYYY-MM-DD`, and `lib/date.ts` does all the conversion. Which items a person sees is decided by the
 // server (audience, staff type, class assignment); nothing here filters by role.
-import type { CalendarItem } from '../../../api/types/calendar';
-import type { ColorTokens } from '../../../theme/tokens';
+import type { CalendarItem } from '../../api/types/calendar';
+import type { ColorTokens } from '../../theme/tokens';
 import {
   AD_MONTHS,
   adIsoToBs,
@@ -15,7 +15,7 @@ import {
   daysInBsMonth,
   shiftIsoDate,
   toIsoDate,
-} from '../../../lib/date';
+} from '../../lib/date';
 
 /** A month of the school's calendar; `month` is 0-indexed in both calendars. */
 export interface MonthRef {
