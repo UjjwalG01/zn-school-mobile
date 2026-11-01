@@ -13,6 +13,9 @@ const TYPE_KEY: Record<string, MessageKey> = {
   leave_decided: 'notifications.type.leave_decided',
   student_absent: 'notifications.type.student_absent',
   results_published: 'notifications.type.results_published',
+  holiday_changed: 'notifications.type.holiday_changed',
+  invoice_issued: 'notifications.type.invoice_issued',
+  payment_recorded: 'notifications.type.payment_recorded',
 };
 
 export const typeLabelKey = (type: string): MessageKey => TYPE_KEY[type] ?? 'notifications.type.other';
