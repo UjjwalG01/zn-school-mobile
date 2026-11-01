@@ -79,6 +79,14 @@ Switch school and Sign out are quiet link buttons, as on the school-context scre
 native `Alert` (it wipes the session and the cached data). A screen whose navigation header already names it does not
 repeat the title in its body (Profile, More).
 
+Built 2026-11-01 (unit-tested, not seen on a device): `DataTable` (`src/components/DataTable.tsx`: the one table for read-only rows.
+`columns` define the header titles and each cell (`render`), `align: 'end'` right-aligns numbers, `flex` shares the width; a header
+row on the page background, a hairline between rows, rows at least 44 pt tall; `rowLabel` reads a whole row to a screen reader when
+a cell alone would not make sense). Used for the monthly attendance lists (My Attendance, guardian Attendance: date, kind, status)
+and the guardian result subject tables (component, obtained, max). Not used for the marks grid (inputs, sticky header, wrapping rows,
+its own component) or for card lists (notifications, notices, assignments). **Attendance status tone** has one definition,
+`STATUS_TONE` in `src/lib/attendanceStatus.ts`, used by every attendance list; guardian code must not import teacher code.
+
 Teacher and guardian screens compose these; no per-feature copies.
 
 Built so far: `Screen` (pull-to-refresh only when `onRefresh` is passed), `Card` (button with a trailing chevron only
