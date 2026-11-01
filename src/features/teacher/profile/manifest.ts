@@ -11,5 +11,5 @@ export const teacherProfileFeature: FeatureManifest = {
   mobileModuleKey: null,
   placement: 'tab',
   order: 50,
-  routes: () => import('./ProfileScreen'),
+  routes: () => import('../../profile/ProfileScreen'),
 };

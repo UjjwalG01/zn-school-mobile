@@ -3,21 +3,21 @@ import { render, screen, userEvent } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 import { Alert } from 'react-native';
 
-import type { Me } from '../../../../api/types/identity';
-import type { School } from '../../../../api/types/tenancy';
-import { meKey, mySchoolsKey } from '../../../../auth/queries';
-import { resetSessionForTests, selectTenant, setShells } from '../../../../auth/session';
+import type { Me } from '../../../api/types/identity';
+import type { School } from '../../../api/types/tenancy';
+import { meKey, mySchoolsKey } from '../../../auth/queries';
+import { resetSessionForTests, selectTenant, setShells } from '../../../auth/session';
 import ProfileScreen from '../ProfileScreen';
 
 const mockSignOut = jest.fn();
 const mockOpenPicker = jest.fn();
 let mockCanSwitch = false;
-jest.mock('../../../../auth/useSignOut', () => ({ useSignOut: () => mockSignOut }));
-jest.mock('../../../../auth/useSchoolSwitch', () => ({
+jest.mock('../../../auth/useSignOut', () => ({ useSignOut: () => mockSignOut }));
+jest.mock('../../../auth/useSchoolSwitch', () => ({
   useSchoolSwitch: () => ({ canSwitch: mockCanSwitch, openPicker: mockOpenPicker }),
 }));
-jest.mock('../../../../api/identity');
-jest.mock('../../../../api/tenancy');
+jest.mock('../../../api/identity');
+jest.mock('../../../api/tenancy');
 
 const ME: Me = {
   id: 'u1',
