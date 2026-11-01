@@ -17,7 +17,8 @@ import { TextField } from '../../../../components/TextField';
 import { t } from '../../../../i18n';
 import { iconSize, MIN_TOUCH_TARGET } from '../../../../theme/tokens';
 import { useTheme } from '../../../../theme/useTheme';
-import { type DraftEntry, effectiveEntry, labelFor, STATUS_TONE } from '../attendanceModel';
+import { STATUS_TONE } from '../../../../lib/attendanceStatus';
+import { type DraftEntry, effectiveEntry, labelFor } from '../attendanceModel';
 import { StatusPicker } from './StatusPicker';
 
 /** The backend's limit for a remark (`BulkAttendanceRowDto.remarks`). */

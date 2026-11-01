@@ -11,7 +11,7 @@ import { Text } from '../../../../components/Text';
 import { TextField } from '../../../../components/TextField';
 import { t } from '../../../../i18n';
 import { useTheme } from '../../../../theme/useTheme';
-import { STATUS_TONE } from '../../attendance/attendanceModel';
+import { STATUS_TONE } from '../../../../lib/attendanceStatus';
 import { StatusPicker } from '../../attendance/components/StatusPicker';
 import { type DraftEntry, effectiveEntry } from '../examAttendanceModel';
 

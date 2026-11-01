@@ -12,7 +12,6 @@ import type {
   BulkRowResult,
   RosterRow,
 } from '../../../api/types/attendance';
-import type { BadgeTone } from '../../../components/StatusBadge';
 import { shiftIsoDate } from '../../../lib/date';
 
 /** One save carries at most this many rows (backend `MAX_ATTENDANCE_BULK_ROWS`): a transport limit, not a business rule. */
@@ -236,12 +235,3 @@ export function applySaved(
 export function dateBounds(today: string, settings: AttendanceSettings): { min: string; max: string } {
   return { min: shiftIsoDate(today, -settings.backdateWindowDays), max: today };
 }
-
-/** Fixed enum → tone. The text label is always shown beside it; colour is never the only signal. */
-export const STATUS_TONE: Record<AttendanceStatus, BadgeTone> = {
-  present: 'success',
-  absent: 'danger',
-  late: 'warning',
-  half_day: 'warning',
-  excused: 'neutral',
-};

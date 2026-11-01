@@ -9,6 +9,7 @@ import type { AttendanceStatus, MyAttendance } from '../../../api/types/attendan
 import { Banner } from '../../../components/Banner';
 import { Button } from '../../../components/Button';
 import { Card } from '../../../components/Card';
+import { DataTable } from '../../../components/DataTable';
 import { OfflineBanner, savedDataTimestamp } from '../../../components/OfflineBanner';
 import { QueryState } from '../../../components/QueryState';
 import { Screen } from '../../../components/Screen';
@@ -22,7 +23,8 @@ import { useTheme } from '../../../theme/useTheme';
 import { useRefreshSchoolsOnFeatureDenied } from '../../featureDenied';
 import { useTenantSettings } from '../../queries';
 import { useManualRefresh } from '../../useManualRefresh';
-import { labelFor, STATUS_TONE } from '../attendance/attendanceModel';
+import { STATUS_TONE } from '../../../lib/attendanceStatus';
+import { labelFor } from '../attendance/attendanceModel';
 import { dayOffText } from '../attendance/dayOffText';
 import { useAttendanceSettings } from '../attendance/queries';
 import { isNotLinked, markErrorKey, recordFor, statusSummary } from './model';
@@ -102,16 +104,20 @@ export default function MyAttendanceScreen() {
             {shown.data ? (
               <View style={{ gap: spacing.sm }}>
                 <Text tone="muted">{statusSummary(shown.data.records, statusLabel)}</Text>
-                <Card>
-                  {shown.data.records.map((record) => (
-                    <View
-                      key={record.id}
-                      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}
-                    >
-                      <Text>{dateText(record.attendanceDate)}</Text>
-                      <StatusBadge label={statusLabel(record.status)} tone={STATUS_TONE[record.status]} />
-                    </View>
-                  ))}
+                <Card chevron={false}>
+                  <DataTable
+                    columns={[
+                      { key: 'date', title: t('table.date'), render: (record) => <Text>{dateText(record.attendanceDate)}</Text> },
+                      {
+                        key: 'status',
+                        title: t('table.status'),
+                        render: (record) => <StatusBadge label={statusLabel(record.status)} tone={STATUS_TONE[record.status]} />,
+                      },
+                    ]}
+                    rows={shown.data.records}
+                    keyExtractor={(record) => record.id}
+                    rowLabel={(record) => `${dateText(record.attendanceDate)}, ${statusLabel(record.status)}`}
+                  />
                 </Card>
               </View>
             ) : null}
