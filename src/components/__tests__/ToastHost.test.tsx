@@ -4,6 +4,9 @@ import { AccessibilityInfo } from 'react-native';
 import { dismissToast, resetToastForTests, showToast, TOAST_DURATION_MS } from '../../lib/toast';
 import { ToastHost } from '../ToastHost';
 
+/** The slide-out duration in ToastHost (not exported; the tests wait it out). */
+const HIDE_MS = 220;
+
 beforeEach(() => {
   jest.useFakeTimers();
   resetToastForTests();
@@ -53,6 +56,12 @@ describe('ToastHost', () => {
     await act(async () => {
       jest.advanceTimersByTime(1);
     });
+    // It slides out first: still mounted until the exit animation finishes.
+    expect(screen.getByText('Saved')).toBeTruthy();
+
+    await act(async () => {
+      jest.advanceTimersByTime(HIDE_MS);
+    });
     expect(screen.queryByText('Saved')).toBeNull();
   });
 
@@ -82,6 +91,9 @@ describe('ToastHost', () => {
     });
 
     await fireEvent.press(screen.getByText('Tap me'));
+    await act(async () => {
+      jest.advanceTimersByTime(HIDE_MS);
+    });
     expect(screen.queryByText('Tap me')).toBeNull();
   });
 
@@ -92,6 +104,9 @@ describe('ToastHost', () => {
     });
     await act(async () => {
       dismissToast();
+    });
+    await act(async () => {
+      jest.advanceTimersByTime(HIDE_MS);
     });
     expect(screen.queryByText('Gone soon')).toBeNull();
   });

@@ -27,7 +27,8 @@ export interface ScreenProps {
 export function Screen({ children, refreshing = false, onRefresh }: ScreenProps) {
   const { colors, spacing } = useTheme();
   return (
-    <SafeAreaView style={[styles.fill, { backgroundColor: colors.bg }]}>
+    // No top edge: every screen sits under a header that already clears the status bar, so a top inset here is a gap.
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.fill, { backgroundColor: colors.bg }]}>
       <KeyboardAvoidingView
         style={styles.fill}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

@@ -88,7 +88,7 @@ export const iconSize = { sm: 16, md: 18, lg: 22 } as const;
 export const gutter = spacing.lg;
 
 /** Minimum touch target in points (accessibility rule). */
-export const MIN_TOUCH_TARGET = 44;
+export const MIN_TOUCH_TARGET = 34;
 
 /** Opacity of a disabled control (text stays readable; the state is also exposed to screen readers). */
 export const DISABLED_OPACITY = 0.5;

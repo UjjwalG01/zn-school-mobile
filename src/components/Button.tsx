@@ -8,7 +8,7 @@ export interface ButtonProps {
   title: string;
   onPress: () => void;
   /** `primary` is a filled button; `link` is a text-only action. */
-  variant?: 'primary' | 'link';
+  variant?: 'primary' | 'link' | 'outline' | 'destructive';
   /** In-flight: blocks further presses and shows a spinner (CLAUDE rule: no double submit). */
   loading?: boolean;
   disabled?: boolean;
