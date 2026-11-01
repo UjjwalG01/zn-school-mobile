@@ -149,12 +149,13 @@ async function perform(
   };
 }
 
-async function send<T>(
+/** One request through the single path (auth, one refresh-and-replay, the error mapping). Resolves to the successful response. */
+async function execute(
   method: Method,
   path: string,
   body: unknown,
   options: ApiRequestOptions,
-): Promise<T> {
+): Promise<Response> {
   const requestTenantId = options.skipTenant ? null : requireConfig().auth?.getTenantId() ?? null;
   let result = await perform(method, path, body, options, requestTenantId);
   let { response } = result;
@@ -197,9 +198,27 @@ async function send<T>(
     );
   }
 
+  return response;
+}
+
+async function send<T>(
+  method: Method,
+  path: string,
+  body: unknown,
+  options: ApiRequestOptions,
+): Promise<T> {
+  const text = await (await execute(method, path, body, options)).text();
   // Controllers returning void still answer 200/201 with an empty body, so don't JSON.parse blindly.
-  const text = await response.text();
   return (text ? JSON.parse(text) : undefined) as T;
+}
+
+/**
+ * A binary body (a PDF) through the same path: the same auth, one refresh-and-replay and the same error mapping (a 404,
+ * a 403 or a 429 arrives as an `ApiError` with its `errorCode`). The bytes are returned, not parsed.
+ */
+export async function apiGetBytes(path: string, options: ApiRequestOptions = {}): Promise<Uint8Array> {
+  const response = await execute('GET', path, undefined, options);
+  return new Uint8Array(await response.arrayBuffer());
 }
 
 export const apiGet = <T>(path: string, options: ApiRequestOptions = {}) =>
@@ -218,4 +237,3 @@ export const apiPut = <T>(path: string, body?: unknown, options: ApiRequestOptio
 export const apiDelete = <T>(path: string, options: ApiRequestOptions = {}) =>
   send<T>('DELETE', path, undefined, options);
 
-// apiGetBlob (reprint PDFs → expo-file-system, cached per tenant) is added with the first PDF feature.

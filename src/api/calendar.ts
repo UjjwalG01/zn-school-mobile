@@ -32,7 +32,8 @@ interface RawLeave {
   startDate: string;
   endDate: string;
 }
-interface RawCalendar {
+/** The calendar body, staff or guardian (`GET /calendar`, `GET /portal/guardian/calendar`): a guardian's `leave` is always empty. */
+export interface RawCalendar {
   from: string;
   to: string;
   events: RawEvent[];
@@ -79,7 +80,11 @@ const fromLeave = (l: RawLeave): CalendarItem => ({
  * events, then leave (the order the web calendar uses).
  */
 export async function getCalendar(from: string, to: string): Promise<CalendarFeed> {
-  const raw = await apiGet<RawCalendar>(`/calendar?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+  return toCalendarFeed(await apiGet<RawCalendar>(`/calendar?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`));
+}
+
+/** One mapper for both calendar bodies, so a guardian's calendar and a staff calendar read the same way. */
+export function toCalendarFeed(raw: RawCalendar): CalendarFeed {
   return {
     from: raw.from,
     to: raw.to,

@@ -8,13 +8,18 @@ export type NotificationType =
   | 'notice_published'
   | 'school_event'
   | 'leave_submitted'
-  | 'leave_decided';
+  | 'leave_decided'
+  | 'holiday_changed'
+  | 'invoice_issued'
+  | 'payment_recorded';
 
 export interface AppNotification {
   id: string;
   /** Kept as the backend sent it; compare with `NotificationType`. */
   type: string;
   referenceId: string;
+  /** `YYYY-MM-DD` of the event's or holiday's first day, or null (ENDPOINTS §7f); a tap can open that day. */
+  referenceDate?: string | null;
   title: string;
   /** ISO timestamp, or null while unread. */
   readAt: string | null;
